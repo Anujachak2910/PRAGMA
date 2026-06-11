@@ -154,10 +154,13 @@ def _validate_and_normalise(maps: list[dict]) -> list[dict]:
         if missing:
             raise ValueError(f"MAP at index {i} is missing required fields: {missing}")
 
-        dept = m["department"].strip().title()
-        if dept not in VALID_DEPARTMENTS:
+        # Case-insensitive match against canonical department names
+        raw_dept = m["department"].strip()
+        dept_lookup = {d.upper(): d for d in VALID_DEPARTMENTS}
+        dept = dept_lookup.get(raw_dept.upper())
+        if dept is None:
             logger.warning(
-                "Unknown department %r in MAP %d — applying keyword routing", dept, i
+                "Unknown department %r in MAP %d — applying keyword routing", raw_dept, i
             )
             dept = _route_department(m["action"])
 
