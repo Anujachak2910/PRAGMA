@@ -66,9 +66,8 @@ def client():
     FastAPI TestClient wrapping the full PRAGMA app.
     Session-scoped for performance — one client for all tests.
 
-    The in-memory stores (circulars_db, maps_db, approvals_db) persist
-    across tests within a session. Use the `clean_state` fixture
-    to reset them between tests if needed.
+    Works with both in-memory (M2) and PostgreSQL-backed (M3+) backends.
+    Use the `fresh_client` fixture to get a clean state between tests.
     """
     from app.main import app
     with TestClient(app) as c:
@@ -78,17 +77,18 @@ def client():
 @pytest.fixture
 def fresh_client():
     """
-    A fresh TestClient that resets all in-memory state.
-    Use this for tests that need a clean slate (e.g., e2e flow tests).
-    """
-    # Reset all in-memory databases before each test
-    from app.api.v1.endpoints import circulars, maps, approvals
-    circulars.circulars_db.clear()
-    maps.maps_db.clear()
-    approvals.approvals_db.clear()
+    A TestClient that starts each test from a clean state.
 
+    Uses POST /demo/reset which works with both:
+      - In-memory backend (M2): clears the in-memory lists
+      - PostgreSQL backend (M3+): truncates DB tables, keeps departments
+
+    This fixture is forward-compatible with Diptanshu's DB integration.
+    """
     from app.main import app
     with TestClient(app) as c:
+        # Reset state using the demo/reset endpoint — works for both backends
+        c.post("/api/v1/demo/reset")
         yield c
 
 

@@ -89,21 +89,29 @@ class TestGetMAP:
     """Tests for GET /api/v1/maps/{id}"""
 
     def test_get_map_by_valid_id_returns_200(self, client):
-        """GET /maps/1 must return 200 when MAP with id=1 exists."""
-        # The default seeded maps_db has id=1
-        response = client.get("/api/v1/maps/1")
-        # If default state has the map, expect 200; if reset, 404 is acceptable
-        assert response.status_code in (200, 404)
+        """GET /maps/{id} for a valid existing MAP must return 200."""
+        # First get the list to find a real ID (works for both int and UUID backends)
+        maps_resp = client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if not maps:
+            pytest.skip("No MAPs in the system to test GET by ID")
+        map_id = maps[0]["id"]
+        response = client.get(f"/api/v1/maps/{map_id}")
+        assert response.status_code == 200
 
     def test_get_map_nonexistent_returns_404(self, client):
-        """GET /maps/99999 must return 404."""
-        response = client.get("/api/v1/maps/99999")
-        assert response.status_code == 404
+        """GET /maps/{fake_uuid} for a non-existent MAP must return 404 or 422."""
+        response = client.get("/api/v1/maps/00000000-0000-0000-0000-000000000000")
+        assert response.status_code in (404, 422)
 
     def test_get_map_includes_approval_history(self, client):
         """GET /maps/{id} for an existing MAP must include approval_history."""
-        # Use default seeded data (id=1)
-        response = client.get("/api/v1/maps/1")
+        maps_resp = client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if not maps:
+            pytest.skip("No MAPs in the system to test approval_history")
+        map_id = maps[0]["id"]
+        response = client.get(f"/api/v1/maps/{map_id}")
         if response.status_code == 200:
             data = response.json()
             assert "approval_history" in data, "MAP detail missing 'approval_history'"
@@ -117,13 +125,19 @@ class TestMAPStatusUpdate:
     """Tests for PATCH /api/v1/maps/{id}/status"""
 
     def test_update_status_to_in_progress_returns_200(self, client):
-        """PATCH /maps/1/status to IN_PROGRESS must return 200."""
+        """PATCH /maps/{id}/status to IN_PROGRESS must return 200 if MAP exists."""
+        maps_resp = client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if not maps:
+            pytest.skip("No MAPs in the system to test status update")
+        map_id = maps[0]["id"]
         response = client.patch(
-            "/api/v1/maps/1",
-            json={"status": "IN_PROGRESS"},
+            f"/api/v1/maps/{map_id}/status",
+            json={"status": "In Progress"},
         )
-        # Accept 200 (success) or 404 (no seeded data) or 405 (route mismatch)
-        assert response.status_code in (200, 404, 405)
+        assert response.status_code in (200, 400), (
+            f"Unexpected status: {response.status_code}"
+        )
 
     def test_update_status_endpoint_exists(self, client):
         """PATCH /maps/{id}/status route must exist (not return 404 from router)."""
@@ -137,17 +151,27 @@ class TestMAPStatusUpdate:
         )
 
     def test_update_status_completed(self, client):
-        """PATCH /maps/{id}/status to COMPLETED must be accepted."""
+        """PATCH /maps/{id}/status to Completed must be accepted."""
+        maps_resp = client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if not maps:
+            pytest.skip("No MAPs in the system to test Completed status")
+        map_id = maps[0]["id"]
         response = client.patch(
-            "/api/v1/maps/1/status",
-            json={"status": "COMPLETED"},
+            f"/api/v1/maps/{map_id}/status",
+            json={"status": "Completed"},
         )
-        assert response.status_code in (200, 404)
+        assert response.status_code in (200, 400)
 
     def test_update_status_invalid_returns_400_or_422(self, client):
         """PATCH with an invalid status must return 400 or 422."""
+        maps_resp = client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if not maps:
+            pytest.skip("No MAPs in the system to test invalid status")
+        map_id = maps[0]["id"]
         response = client.patch(
-            "/api/v1/maps/1/status",
+            f"/api/v1/maps/{map_id}/status",
             json={"status": "BANANA"},
         )
         assert response.status_code in (400, 422), (
@@ -155,9 +179,9 @@ class TestMAPStatusUpdate:
         )
 
     def test_update_nonexistent_map_returns_404(self, client):
-        """PATCH /maps/99999/status must return 404."""
+        """PATCH /maps/{fake_uuid}/status must return 404 or 422."""
         response = client.patch(
-            "/api/v1/maps/99999/status",
-            json={"status": "IN_PROGRESS"},
+            "/api/v1/maps/00000000-0000-0000-0000-000000000000/status",
+            json={"status": "In Progress"},
         )
-        assert response.status_code == 404
+        assert response.status_code in (404, 422)

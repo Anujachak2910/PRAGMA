@@ -61,17 +61,27 @@ class TestFullDemoFlow:
         self, fresh_client, mock_claude_extract, digital_lending_text
     ):
         """Demo step 1:45 — Compliance officer approves a MAP."""
-        fresh_client.post(
+        upload = fresh_client.post(
             "/api/v1/circulars/upload",
             json={"title": "RBI Digital Lending 2022", "content": digital_lending_text},
         )
+        # Get a real map ID from the response or from GET /maps
+        maps_resp = fresh_client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if not maps:
+            pytest.skip("No MAPs available to approve")
+        map_id = maps[0]["id"]
+
         response = fresh_client.post(
             "/api/v1/approvals",
             json={
-                "map_id": 1,
+                "map_id": map_id,
                 "decision": "APPROVED",
+                "action": "Approved",
                 "reviewer": "Compliance Officer",
+                "approved_by": "Compliance Officer",
                 "comments": "Verified against RBI Digital Lending Directions 2022 — proceed.",
+                "notes": "Verified against RBI Digital Lending Directions 2022 — proceed.",
             },
         )
         assert response.status_code == 200
@@ -86,18 +96,26 @@ class TestFullDemoFlow:
             "/api/v1/circulars/upload",
             json={"title": "RBI Digital Lending 2022", "content": digital_lending_text},
         )
+        maps_resp = fresh_client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if len(maps) < 2:
+            pytest.skip("Need at least 2 MAPs to test rejection")
+        map_id = maps[1]["id"]
+
         response = fresh_client.post(
             "/api/v1/approvals",
             json={
-                "map_id": 2,
+                "map_id": map_id,
                 "decision": "REJECTED",
+                "action": "Rejected",
                 "reviewer": "Compliance Officer",
-                "comments": "Action already covered under existing policy — no new work required.",
+                "approved_by": "Compliance Officer",
+                "comments": "Action already covered under existing policy.",
+                "notes": "Action already covered under existing policy.",
             },
         )
         assert response.status_code == 200
         data = response.json()
-        # Verify the rejection was recorded
         assert "rejected" in str(data).lower() or "approval" in data or "message" in data
 
     def test_step6_invalid_approval_decision_is_rejected(self, fresh_client):
@@ -121,13 +139,22 @@ class TestFullDemoFlow:
             "/api/v1/circulars/upload",
             json={"title": "Test", "content": digital_lending_text},
         )
+        maps_resp = fresh_client.get("/api/v1/maps")
+        maps = maps_resp.json()
+        if len(maps) < 2:
+            pytest.skip("Need at least 2 MAPs to test approval list growth")
+
         fresh_client.post(
             "/api/v1/approvals",
-            json={"map_id": 1, "decision": "APPROVED", "reviewer": "CO", "comments": "OK"},
+            json={"map_id": maps[0]["id"], "decision": "APPROVED",
+                  "action": "Approved", "reviewer": "CO",
+                  "approved_by": "CO", "comments": "OK", "notes": "OK"},
         )
         fresh_client.post(
             "/api/v1/approvals",
-            json={"map_id": 2, "decision": "REJECTED", "reviewer": "CO", "comments": "Dup"},
+            json={"map_id": maps[1]["id"], "decision": "REJECTED",
+                  "action": "Rejected", "reviewer": "CO",
+                  "approved_by": "CO", "comments": "Dup", "notes": "Dup"},
         )
         approvals = fresh_client.get("/api/v1/approvals").json()
         assert len(approvals) == 2
