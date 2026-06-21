@@ -17,7 +17,7 @@ import uuid
 
 from app.database import get_db
 from app.models.circular import Circular
-from app.schemas.circular import CircularUploadRequest, CircularOut
+from app.schemas.circular import CircularUploadRequest, CircularOut, CircularSummaryOut
 from app.services.claude_service import extract_maps
 from app.services.map_service import create_maps_from_extraction
 from app.services.event_service import log_event
@@ -80,12 +80,13 @@ async def upload_circular(payload: CircularUploadRequest, db: Session = Depends(
         )
 
 
-@router.get("", response_model=List[CircularOut])
+@router.get("", response_model=List[CircularSummaryOut])
 async def list_circulars(db: Session = Depends(get_db)):
     """
-    List all uploaded circulars.
+    List all uploaded circulars (summary only — no content or maps).
+    Use GET /circulars/{id} for the full detail including maps.
     """
-    return db.query(Circular).all()
+    return db.query(Circular).order_by(Circular.uploaded_at.desc()).all()
 
 
 @router.get("/{circular_id}", response_model=CircularOut)

@@ -1,10 +1,5 @@
 """
 PRAGMA — Circular Pydantic Schemas
-
-Owner: Diptanshu / Diyasha
-Milestone: M2
-
-Defines request/response shapes for the /circulars endpoints.
 """
 
 from pydantic import BaseModel, ConfigDict
@@ -17,11 +12,31 @@ from app.schemas.map import MAPOut
 
 class CircularUploadRequest(BaseModel):
     title: str
-    source: str                      # 'RBI' | 'SEBI' | 'MCA'
+    source: str
     content: str
 
 
+class CircularSummaryOut(BaseModel):
+    """
+    Lightweight schema for GET /circulars (list view).
+
+    Deliberately excludes `content` (full circular text, often 10–50 KB)
+    and `maps` (triggers N+1 department lazy-loads).
+
+    Previously: GET /circulars returned CircularOut with content + maps,
+    causing 1 + N_circulars + N_circulars×N_maps DB round trips per call.
+    """
+    id: uuid.UUID
+    title: str
+    source: str
+    status: str
+    uploaded_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CircularOut(BaseModel):
+    """Full schema for GET /circulars/{id} (detail view)."""
     id: uuid.UUID
     title: str
     source: str

@@ -13,7 +13,7 @@ Responsibilities:
 
 from datetime import datetime, date
 import logging
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import uuid
 
 from app.models.map import MAP, MAP_STATUSES
@@ -86,9 +86,13 @@ def get_maps(
     circular_id: uuid.UUID = None
 ) -> list[MAP]:
     """
-    Query MAPs with optional filters for status, department name, priority, and parent circular.
+    Query MAPs with optional filters.
+
+    Uses joinedload for department to avoid N+1 queries.
+    Previously: accessing map.department in MAPOut fired one SELECT per MAP.
+    Now: department is loaded in a single JOIN on the initial query.
     """
-    query = db.query(MAP)
+    query = db.query(MAP).options(joinedload(MAP.department))
 
     if status:
         query = query.filter(MAP.status.ilike(status.strip()))

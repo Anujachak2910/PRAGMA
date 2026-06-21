@@ -5,6 +5,7 @@ Reads settings from .env via pydantic-settings.
 Import the `settings` singleton anywhere in the app.
 """
 
+from typing import Optional
 from pydantic_settings import BaseSettings
 
 
@@ -13,7 +14,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str
 
     # --- Anthropic / Claude ---
-    ANTHROPIC_API_KEY: str
+    # Optional so the app starts and serves all non-Claude endpoints even
+    # when the key is absent (e.g. teammate running without API access).
+    # claude_service.py checks for None before making API calls.
+    ANTHROPIC_API_KEY: Optional[str] = None
     CLAUDE_MODEL: str = "claude-sonnet-4-6"
 
     # --- Application ---
@@ -27,5 +31,4 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-# Singleton — import this, never instantiate Settings directly elsewhere
 settings = Settings()

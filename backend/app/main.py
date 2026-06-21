@@ -1,10 +1,10 @@
 """
 PRAGMA — FastAPI Application Factory
 
-Owner: Diyasha (Backend APIs)
 Registers CORS middleware, mounts all API routers, exposes health check.
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,14 +15,35 @@ from app.database import SessionLocal
 from app.services.department_service import seed_departments
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Seed departments on startup
+def _seed_sync() -> None:
+    """Run department seed in a worker thread — keeps event loop free."""
     db = SessionLocal()
     try:
         seed_departments(db)
     finally:
         db.close()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Startup: seed departments without blocking the event loop.
+
+    Previous bug: called seed_departments() (synchronous psycopg2 I/O)
+    directly inside the async lifespan, which blocked uvicorn's event loop
+    until Neon connected or the OS TCP timeout fired (~75s on Windows).
+    During that window no requests — including /health — could be served.
+    """
+    loop = asyncio.get_event_loop()
+    try:
+        await asyncio.wait_for(
+            loop.run_in_executor(None, _seed_sync),
+            timeout=12.0,   # connect_timeout(10s) + buffer
+        )
+    except asyncio.TimeoutError:
+        print("[PRAGMA] Startup DB seed timed out — database may be unavailable. Continuing.")
+    except Exception as exc:
+        print(f"[PRAGMA] Startup DB seed skipped — {exc}")
     yield
 
 
@@ -39,7 +60,7 @@ app = FastAPI(
 )
 
 # ---------------------------------------------------------------------------
-# CORS — open for prototype; lock down origins before any public deployment
+# CORS
 # ---------------------------------------------------------------------------
 
 app.add_middleware(
@@ -57,7 +78,7 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api/v1")
 
 # ---------------------------------------------------------------------------
-# Health check — used by frontend to verify backend is alive
+# Health — no DB dependency; always responds instantly
 # ---------------------------------------------------------------------------
 
 
