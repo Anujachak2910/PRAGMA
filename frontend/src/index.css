@@ -1,6 +1,17 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Design tokens — RGB channel values so Tailwind /opacity modifiers work ── */
+:root {
+  --paper: 248 246 242;   /* #F8F6F2  cream background */
+  --line:  226 221 214;   /* #E2DDD6  warm hairline border */
+}
+
+.dark {
+  --paper: 13 17 23;      /* #0D1117  Bloomberg-dark background */
+  --line:  30 40 55;      /* #1E2837  dark border */
+}
 
 @layer base {
   html {
@@ -10,22 +21,47 @@
     font-optical-sizing: auto;
   }
   body {
-    background-color: #FAF9F6;
-    color: #14212E;
+    background-color: rgb(var(--paper));
+    color: #041E42;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .dark body {
+    color: #D1DCE8;
   }
 }
 
 @layer utilities {
   .tnum { font-variant-numeric: tabular-nums; }
+
+  .skeleton {
+    background: linear-gradient(90deg, #ede9e0 25%, #e4dfd5 50%, #ede9e0 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+  }
+  .dark .skeleton {
+    background: linear-gradient(90deg, #1E2835 25%, #252F3E 50%, #1E2835 75%);
+    background-size: 1000px 100%;
+  }
 }
 
-/* Warm, quiet scrollbar */
-::-webkit-scrollbar { width: 10px; height: 10px; }
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
+}
+
+/* ── Slim scrollbar — light mode ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb {
-  background: #DED8CC;
+  background: #C9C0B3;
   border-radius: 8px;
-  border: 2px solid #FAF9F6;
 }
-::-webkit-scrollbar-thumb:hover { background: #C9C2B2; }
+::-webkit-scrollbar-thumb:hover { background: #B0A598; }
+::-webkit-scrollbar-track { background: transparent; }
 
-::selection { background: #143049; color: #FAF9F6; }
+/* ── Slim scrollbar — dark mode ── */
+.dark ::-webkit-scrollbar-thumb { background: #2D3748; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #4A5568; }
+
+::selection { background: #041E42; color: #F8F6F2; }
+.dark ::selection { background: #B08D57; color: #0D1117; }
