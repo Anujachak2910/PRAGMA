@@ -1,35 +1,32 @@
 """
-PRAGMA — Claude MAP Extraction Service
-Owner: Anoushka (AI Lead)
+PRAGMA — Claude MAP Extraction Service (LEGACY — preserved for reference)
+
+This service is NO LONGER the primary extraction engine.
+The system now uses app.services.ai_engine which routes to:
+  1. Ollama (local LLM) — primary
+  2. rule_extractor     — automatic fallback
+
+This file is kept for:
+  - Reference / documentation of the original prompt engineering
+  - Optional future re-activation if Claude access is restored
+  - Shared constants imported by other modules
+
+NOTE: The anthropic package may NOT be installed. All imports are lazy.
 """
 
 import json
 import logging
 from typing import Optional
-import anthropic
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Lazy-initialised — avoids crashing at import time when ANTHROPIC_API_KEY
-# is absent. The client is created on first extract_maps() call.
-_client: Optional[anthropic.Anthropic] = None
-
-
-def _get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        if not settings.ANTHROPIC_API_KEY:
-            raise RuntimeError(
-                "ANTHROPIC_API_KEY is not set in .env — "
-                "circular upload requires a valid Anthropic API key."
-            )
-        _client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-    return _client
-
+# Lazy-initialised — only created if this service is explicitly invoked.
+_client = None
 
 VALID_DEPARTMENTS = {"IT", "Compliance", "Risk", "Treasury", "Legal"}
-VALID_PRIORITIES = {"Critical", "High", "Medium", "Low"}
+VALID_PRIORITIES  = {"Critical", "High", "Medium", "Low"}
 
 SYSTEM_PROMPT = """You are a regulatory compliance analyst for an Indian bank. \
 Your job is to read regulatory circulars from RBI, SEBI, or MCA and extract \
@@ -89,48 +86,51 @@ RETRY_SUFFIX = (
 )
 
 
-def _call_claude(circular_text: str, strict: bool = False) -> str:
-    content = USER_PROMPT_TEMPLATE.format(circular_text=circular_text)
-    if strict:
-        content += RETRY_SUFFIX
-
-    response = _get_client().messages.create(
-        model=settings.CLAUDE_MODEL,
-        max_tokens=4096,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": content}],
-    )
-    return response.content[0].text.strip()
-
-
-def _parse_json(raw: str) -> list[dict]:
-    text = raw.strip()
-    if text.startswith("```"):
-        lines = text.split("\n")
-        inner = [l for l in lines[1:] if l.strip() != "```"]
-        text = "\n".join(inner).strip()
-    return json.loads(text)
+def _get_client():
+    """Lazy Anthropic client — only initialised when explicitly called."""
+    global _client
+    if _client is None:
+        try:
+            import anthropic as _anthropic  # noqa: PLC0415
+        except ImportError:
+            raise RuntimeError(
+                "anthropic package is not installed. "
+                "PRAGMA uses Ollama for offline inference. "
+                "Install anthropic only if you explicitly want to use the Claude API."
+            )
+        if not settings.ANTHROPIC_API_KEY:
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY is not set — Claude extraction is disabled. "
+                "The system will use Ollama or rule-based extraction instead."
+            )
+        _client = _anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return _client
 
 
 def _route_department(action_text: str) -> str:
+    """Keyword-based department routing (shared utility)."""
     text = action_text.lower()
     if any(k in text for k in ["cyber", "security", "system", "software", "platform",
-                                 "data infra", "it ", "digital platform", "technolog", "implement system"]):
+                                "data infra", "it ", "digital platform", "technolog",
+                                "implement system"]):
         return "IT"
     if any(k in text for k in ["kyc", "aml", "cft", "report", "audit", "disclosure",
-                                 "document", "monitor", "filing", "regulatory submission"]):
+                                "document", "monitor", "filing", "regulatory submission"]):
         return "Compliance"
-    if any(k in text for k in ["risk", "credit", "fraud", "stress", "operational", "exposure"]):
+    if any(k in text for k in ["risk", "credit", "fraud", "stress", "operational",
+                                "exposure"]):
         return "Risk"
-    if any(k in text for k in ["capital", "liquidity", "treasury", "funding", "interest rate",
-                                 "investment", "nsfr", "lcr", "reserve"]):
+    if any(k in text for k in ["capital", "liquidity", "treasury", "funding",
+                                "interest rate", "investment", "nsfr", "lcr", "reserve"]):
         return "Treasury"
-    if any(k in text for k in ["legal", "contract", "policy", "grievance", "redress", "obligation"]):
+    if any(k in text for k in ["legal", "contract", "policy", "grievance", "redress",
+                                "obligation"]):
         return "Legal"
     return "Compliance"
 
 
 def _validate_and_normalise(maps: list[dict]) -> list[dict]:
+    """Validate and normalise Claude MAP output (shared utility)."""
     required = {"action", "department", "priority"}
     result = []
     for i, m in enumerate(maps):
@@ -138,7 +138,7 @@ def _validate_and_normalise(maps: list[dict]) -> list[dict]:
         if missing:
             raise ValueError(f"MAP at index {i} is missing required fields: {missing}")
 
-        raw_dept = m["department"].strip()
+        raw_dept  = m["department"].strip()
         dept_lookup = {d.upper(): d for d in VALID_DEPARTMENTS}
         dept = dept_lookup.get(raw_dept.upper())
         if dept is None:
@@ -155,28 +155,49 @@ def _validate_and_normalise(maps: list[dict]) -> list[dict]:
             deadline = None
 
         result.append({
-            "action": m["action"].strip(),
-            "department": dept,
-            "priority": priority,
-            "deadline": deadline,
+            "action":           m["action"].strip(),
+            "department":       dept,
+            "priority":         priority,
+            "deadline":         deadline,
             "validation_notes": m.get("validation_notes", "").strip(),
         })
     return result
 
 
+def _parse_json(raw: str) -> list[dict]:
+    text = raw.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        inner = [ln for ln in lines[1:] if ln.strip() != "```"]
+        text  = "\n".join(inner).strip()
+    return json.loads(text)
+
+
+def _call_claude(circular_text: str, strict: bool = False) -> str:
+    content = USER_PROMPT_TEMPLATE.format(circular_text=circular_text)
+    if strict:
+        content += RETRY_SUFFIX
+    response = _get_client().messages.create(
+        model=settings.CLAUDE_MODEL,
+        max_tokens=4096,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": content}],
+    )
+    return response.content[0].text.strip()
+
+
 def extract_maps(circular_text: str) -> list[dict]:
     """
-    Extract Measurable Action Points from a regulatory circular using Claude.
+    Extract MAPs using Claude API (LEGACY — requires ANTHROPIC_API_KEY and internet).
 
-    Raises RuntimeError if ANTHROPIC_API_KEY is not configured.
-    Retries once with a stricter prompt on malformed JSON.
+    Prefer app.services.ai_engine.extract_maps() for offline operation.
     """
     if not circular_text or not circular_text.strip():
         raise ValueError("circular_text cannot be empty")
 
     try:
         raw = _call_claude(circular_text)
-    except anthropic.APIError as e:
+    except Exception as e:
         raise RuntimeError(f"Claude API error on first call: {e}") from e
 
     try:
@@ -184,7 +205,7 @@ def extract_maps(circular_text: str) -> list[dict]:
     except json.JSONDecodeError:
         logger.warning("Malformed JSON on first attempt — retrying with strict prompt")
         try:
-            raw = _call_claude(circular_text, strict=True)
+            raw  = _call_claude(circular_text, strict=True)
             maps = _parse_json(raw)
         except json.JSONDecodeError as e:
             raise ValueError(
@@ -193,6 +214,6 @@ def extract_maps(circular_text: str) -> list[dict]:
             ) from e
 
     if not maps:
-        raise ValueError("Claude returned an empty MAP list — circular may be too short or ambiguous")
+        raise ValueError("Claude returned an empty MAP list")
 
     return _validate_and_normalise(maps)

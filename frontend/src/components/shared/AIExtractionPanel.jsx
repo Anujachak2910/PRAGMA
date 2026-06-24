@@ -66,7 +66,7 @@ function AIExtractionPanel({ maps }) {
       <div className="mt-4 flex items-center gap-1.5 rounded border border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-900/20 px-2.5 py-1.5">
         <Sparkles size={11} className="text-violet-500 dark:text-violet-400 flex-shrink-0" />
         <span className="font-mono text-[10px] text-violet-700 dark:text-violet-400">
-          Powered by Claude AI (claude-sonnet-4-6) · Anthropic
+          Powered by Local AI Engine · Air-Gapped Inference
         </span>
       </div>
 

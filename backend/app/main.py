@@ -2,21 +2,35 @@
 PRAGMA — FastAPI Application Factory
 
 Registers CORS middleware, mounts all API routers, exposes health check.
+Offline-first: creates SQLite tables on startup, seeds departments.
 """
 
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.api.v1.router import api_router
-from app.database import SessionLocal
+from app.database import SessionLocal, create_all_tables
 from app.services.department_service import seed_departments
 
+logger = logging.getLogger(__name__)
 
-def _seed_sync() -> None:
-    """Run department seed in a worker thread — keeps event loop free."""
+
+def _startup_sync() -> None:
+    """
+    Run synchronous startup tasks in a worker thread so the event loop stays free.
+
+    Order:
+      1. create_all_tables() — DDL; safe to call repeatedly (IF NOT EXISTS)
+      2. seed_departments()  — inserts 5 department rows if table is empty
+    """
+    # Ensure tables exist (critical for SQLite — no external migration tool)
+    create_all_tables()
+    logger.info("[PRAGMA] Tables created / verified")
+
     db = SessionLocal()
     try:
         seed_departments(db)
@@ -26,24 +40,16 @@ def _seed_sync() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Startup: seed departments without blocking the event loop.
-
-    Previous bug: called seed_departments() (synchronous psycopg2 I/O)
-    directly inside the async lifespan, which blocked uvicorn's event loop
-    until Neon connected or the OS TCP timeout fired (~75s on Windows).
-    During that window no requests — including /health — could be served.
-    """
     loop = asyncio.get_event_loop()
     try:
         await asyncio.wait_for(
-            loop.run_in_executor(None, _seed_sync),
-            timeout=12.0,   # connect_timeout(10s) + buffer
+            loop.run_in_executor(None, _startup_sync),
+            timeout=15.0,
         )
     except asyncio.TimeoutError:
-        print("[PRAGMA] Startup DB seed timed out — database may be unavailable. Continuing.")
+        logger.warning("[PRAGMA] Startup tasks timed out — continuing anyway")
     except Exception as exc:
-        print(f"[PRAGMA] Startup DB seed skipped — {exc}")
+        logger.warning("[PRAGMA] Startup tasks failed: %s — continuing anyway", exc)
     yield
 
 
@@ -51,17 +57,15 @@ app = FastAPI(
     title="PRAGMA API",
     description=(
         "Proactive Regulatory Autonomous Governance & Management Agent — "
-        "SuRaksha Cyber Hackathon 2.0"
+        "Air-Gapped Compliance Intelligence · SuRaksha Cyber Hackathon 2.0"
     ),
-    version="0.1.0",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
 )
 
-# ---------------------------------------------------------------------------
-# CORS
-# ---------------------------------------------------------------------------
+# ── CORS ──────────────────────────────────────────────────────────────────────
 
 app.add_middleware(
     CORSMiddleware,
@@ -71,17 +75,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------------------------------------------------------------------------
-# Routers
-# ---------------------------------------------------------------------------
+# ── Routers ───────────────────────────────────────────────────────────────────
 
 app.include_router(api_router, prefix="/api/v1")
 
-# ---------------------------------------------------------------------------
-# Health — no DB dependency; always responds instantly
-# ---------------------------------------------------------------------------
+# ── Health — never blocks; reports AI engine status ───────────────────────────
 
 
 @app.get("/health", tags=["system"])
 async def health_check():
-    return {"status": "ok", "service": "PRAGMA API", "version": "0.1.0"}
+    """
+    Tri-state health endpoint.
+    status: "ok" — API reachable, AI engine available
+    status: "degraded" — API reachable, AI running in rule-based fallback mode
+    """
+    try:
+        from app.services.ai_engine import get_engine_status
+        ai = get_engine_status()
+    except Exception:
+        ai = {"engine": "unknown", "model": None, "available": False, "label": "Unknown"}
+
+    return {
+        "status":       "ok",
+        "service":      "PRAGMA API",
+        "version":      "1.0.0",
+        "ai_engine":    ai["engine"],
+        "ai_model":     ai.get("model"),
+        "ai_available": ai.get("available", False),
+        "ai_label":     ai.get("label", ""),
+        "offline_mode": True,
+    }

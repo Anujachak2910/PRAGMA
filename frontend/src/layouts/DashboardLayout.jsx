@@ -9,7 +9,7 @@ export default function DashboardLayout() {
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar />
-        <main className="flex-1 overflow-y-auto px-6 py-5">
+        <main className="flex-1 overflow-y-auto px-6 py-5 page-gradient">
           <Outlet />
         </main>
         <footer className="border-t border-line bg-paper/80 dark:bg-paper/90 px-6 py-2 flex-shrink-0">
@@ -18,7 +18,7 @@ export default function DashboardLayout() {
               PRAGMA Regulatory Compliance System · Canara Bank Demo
             </span>
             <span className="font-mono text-[10px] text-gray-400 dark:text-gray-600">
-              Suraksha Cyber Hackathon 2026 · Powered by Claude AI + FastAPI + PostgreSQL
+              Suraksha Cyber Hackathon 2026 · Local AI Engine · FastAPI · SQLite
             </span>
           </div>
         </footer>

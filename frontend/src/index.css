@@ -11,9 +11,9 @@
 }
 
 .dark {
-  --paper:   7   16  25;    /* #071019  deep navy void        */
+  --paper:   7   16  24;    /* #071018  deep navy void        */
   --surface: 13  23  38;    /* #0d1726  elevated panel        */
-  --card:    18  32  51;    /* #122033  card surface          */
+  --card:    16  28  44;    /* #101c2c  card surface          */
   --line:    32  50  71;    /* #203247  structural border     */
 }
 
@@ -44,8 +44,21 @@
     animation: shimmer 2s infinite linear;
   }
   .dark .skeleton {
-    background: linear-gradient(90deg, #0d1726 25%, #122033 50%, #0d1726 75%);
+    background: linear-gradient(90deg, #0d1726 25%, #101c2c 50%, #0d1726 75%);
     background-size: 1000px 100%;
+  }
+
+  /* Page container: subtle top-to-bottom depth gradient in dark mode */
+  .dark .page-gradient {
+    background: linear-gradient(180deg, #071018 0%, #0b1523 100%);
+  }
+
+  /* Glass border: white-alpha hairline on dark surfaces — more neutral than a tinted border */
+  .dark .border-line {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+  .dark .divide-line > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(255, 255, 255, 0.06);
   }
 }
 
@@ -64,4 +77,4 @@
 .dark ::-webkit-scrollbar-thumb:hover { background: #2d4860; }
 
 ::selection { background: #041E42; color: #F8F6F2; }
-.dark ::selection { background: #c69b4f; color: #071019; }
+.dark ::selection { background: #c69b4f; color: #071018; }

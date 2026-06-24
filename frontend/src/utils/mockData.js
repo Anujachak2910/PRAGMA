@@ -407,10 +407,10 @@ export const MOCK_EVENTS = [
   { id: 'e9',  event_type: 'MAP_STATUS_CHANGED', description: 'Risk moved BCP update MAP to In Progress',                            actor: 'Risk Manager',                created_at: '2026-06-21T10:24:00' },
   { id: 'e8',  event_type: 'MAP_APPROVED',       description: 'IT approved: Quarterly vulnerability assessments and penetration testing', actor: 'Compliance Officer',       created_at: '2026-06-21T10:18:00' },
   { id: 'e7',  event_type: 'MAP_STATUS_CHANGED', description: 'Compliance marked audit-trails MAP as Completed',                     actor: 'Compliance Administrator',    created_at: '2026-06-21T10:12:00' },
-  { id: 'e6',  event_type: 'MAPS_EXTRACTED',     description: 'Claude AI extracted 6 MAPs from RBI Cybersecurity Framework 2026',    actor: 'Claude AI (claude-sonnet-4-6)', created_at: '2026-06-21T10:02:00' },
+  { id: 'e6',  event_type: 'MAPS_EXTRACTED',     description: 'Local AI Engine extracted 6 MAPs from RBI Cybersecurity Framework 2026',    actor: 'PRAGMA AI Engine (phi3.5)', created_at: '2026-06-21T10:02:00' },
   { id: 'e5',  event_type: 'CIRCULAR_UPLOADED',  description: 'RBI Cybersecurity Framework for Banks 2026 uploaded for processing',  actor: 'Compliance Administrator',    created_at: '2026-06-21T09:55:00' },
   { id: 'e4',  event_type: 'MAP_APPROVED',       description: 'Legal approved: Quarterly cyber incident reporting to SEBI',          actor: 'Legal Officer',               created_at: '2026-06-20T16:30:00' },
   { id: 'e3',  event_type: 'MAP_STATUS_CHANGED', description: 'Risk moved cybersecurity training MAP to In Progress',                actor: 'Risk Manager',                created_at: '2026-06-20T15:20:00' },
-  { id: 'e2',  event_type: 'MAPS_EXTRACTED',     description: 'Claude AI extracted 4 MAPs from SEBI CSCRF 2024',                    actor: 'Claude AI (claude-sonnet-4-6)', created_at: '2026-06-20T14:45:00' },
+  { id: 'e2',  event_type: 'MAPS_EXTRACTED',     description: 'Local AI Engine extracted 4 MAPs from SEBI CSCRF 2024',                    actor: 'PRAGMA AI Engine (phi3.5)', created_at: '2026-06-20T14:45:00' },
   { id: 'e1',  event_type: 'CIRCULAR_UPLOADED',  description: 'SEBI Cybersecurity and Cyber Resilience Framework uploaded',         actor: 'Compliance Administrator',    created_at: '2026-06-20T14:30:00' },
 ]

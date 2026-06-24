@@ -243,11 +243,22 @@ export default function Dashboard() {
       trend: { dir: metrics.score >= 70 ? 'up' : 'warn', label: metrics.score >= 70 ? 'On track' : 'Below 70% target' },
     },
     {
-      label: 'Total MAPs',
-      value: maps.length,
-      dot: 'bg-ink dark:bg-primary-400',
-      sub: `${circulars.length} circular${circulars.length !== 1 ? 's' : ''} processed`,
-      trend: maps.length > 0 ? { dir: 'up', label: `${maps.length} auto-extracted` } : null,
+      label: 'Pending Review',
+      value: metrics.pending,
+      dot: metrics.pending > 0 ? 'bg-warning' : 'bg-[#8b98aa]',
+      sub: `${metrics.approved} approved · ${metrics.inProg} in progress`,
+      trend: metrics.pending > 0
+        ? { dir: 'warn', label: 'Awaiting officer approval' }
+        : { dir: 'ok', label: 'Queue clear' },
+    },
+    {
+      label: 'Critical Actions',
+      value: metrics.critical,
+      dot: metrics.critical > 0 ? 'bg-danger' : 'bg-[#8b98aa]',
+      sub: 'high-urgency regulatory flags',
+      trend: metrics.critical > 0
+        ? { dir: 'down', label: `${metrics.critical} require priority action` }
+        : { dir: 'ok', label: 'None outstanding' },
     },
     {
       label: 'Overdue',
@@ -259,22 +270,11 @@ export default function Dashboard() {
         : { dir: 'ok', label: 'All MAPs on schedule' },
     },
     {
-      label: 'Critical Actions',
-      value: metrics.critical,
-      dot: 'bg-red-500',
-      sub: 'high-urgency regulatory flags',
-      trend: metrics.critical > 0
-        ? { dir: 'down', label: `${metrics.critical} require priority action` }
-        : { dir: 'ok', label: 'None outstanding' },
-    },
-    {
-      label: 'Depts Impacted',
-      value: metrics.depts,
-      dot: 'bg-violet-500',
-      sub: 'departments in compliance scope',
-      trend: trends.approved > 0
-        ? { dir: 'up', label: `${trends.approved} MAPs reviewed` }
-        : null,
+      label: 'Circulars Ingested',
+      value: circulars.length,
+      dot: 'bg-brass',
+      sub: `${metrics.depts} dept${metrics.depts !== 1 ? 's' : ''} · ${maps.length} MAPs extracted`,
+      trend: maps.length > 0 ? { dir: 'up', label: 'Auto-extracted by Local AI Engine' } : null,
     },
   ]
 

@@ -4,26 +4,22 @@ PRAGMA — Department ORM Model
 Represents a bank department that can own and action MAPs.
 Seeded on startup — not created by users.
 
-Owner: Diptanshu (Database Design)
-Milestone: M1
+Uses UUIDType (String-backed) for SQLite + PostgreSQL compatibility.
 """
 
-import uuid
 from sqlalchemy import Column, String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.database import Base
+from app.database import Base, UUIDType
 
-# Seeded department names — matches routing logic in claude_service.py
 DEPARTMENT_NAMES = ["IT", "Compliance", "Risk", "Treasury", "Legal"]
 
 
 class Department(Base):
     __tablename__ = "departments"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, nullable=False, unique=True)
+    id   = Column(UUIDType, primary_key=True, default=UUIDType.new)
+    name = Column(String,   nullable=False, unique=True)
 
     # Relationships
     maps = relationship("MAP", back_populates="department")

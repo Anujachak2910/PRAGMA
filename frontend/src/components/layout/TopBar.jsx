@@ -1,22 +1,44 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useBackendStatus } from '../../hooks/useBackendStatus'
-import { User, Building2, Activity } from 'lucide-react'
+import { User, Building2, Activity, Cpu } from 'lucide-react'
 import ThemeToggle from '../shared/ThemeToggle'
 
 const PAGES = {
-  '/':         { title: 'Command Dashboard',       ref: 'OVERVIEW' },
-  '/maps':     { title: 'Action Point Register',   ref: 'REGISTER' },
-  '/review':   { title: 'AI Extraction Review',    ref: 'REVIEW' },
-  '/approvals':{ title: 'Compliance Review Queue', ref: 'QUEUE' },
-  '/events':   { title: 'Audit Event Ledger',      ref: 'LEDGER' },
-  '/upload':   { title: 'Circular Ingestion',      ref: 'INTAKE' },
+  '/':          { title: 'Command Dashboard',       ref: 'OVERVIEW' },
+  '/maps':      { title: 'Action Point Register',   ref: 'REGISTER' },
+  '/review':    { title: 'AI Extraction Review',    ref: 'REVIEW'   },
+  '/approvals': { title: 'Compliance Review Queue', ref: 'QUEUE'    },
+  '/events':    { title: 'Audit Event Ledger',      ref: 'LEDGER'   },
+  '/upload':    { title: 'Circular Ingestion',      ref: 'INTAKE'   },
+  '/simulate':  { title: 'Compliance Impact Simulator', ref: 'SIMULATE' },
+}
+
+const STATUS_CFG = {
+  healthy:  {
+    pill:  'border-success-200 dark:border-green-800 bg-success-50 dark:bg-green-900/30',
+    dot:   'bg-success animate-pulse',
+    text:  'text-success-700 dark:text-green-400',
+    label: 'System Online',
+  },
+  degraded: {
+    pill:  'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30',
+    dot:   'bg-warning animate-pulse',
+    text:  'text-warning-700 dark:text-amber-400',
+    label: 'Degraded Mode',
+  },
+  offline: {
+    pill:  'border-warning-200 dark:border-amber-800 bg-warning-50 dark:bg-amber-900/30',
+    dot:   'bg-gray-300 dark:bg-gray-600',
+    text:  'text-warning-700 dark:text-amber-400',
+    label: 'Offline Mode',
+  },
 }
 
 export default function TopBar() {
-  const { pathname } = useLocation()
-  const page = PAGES[pathname] || { title: 'PRAGMA', ref: '—' }
-  const { online, checked } = useBackendStatus()
+  const { pathname }                    = useLocation()
+  const page                            = PAGES[pathname] || { title: 'PRAGMA', ref: '—' }
+  const { status, aiLabel, online, checked } = useBackendStatus()
 
   const [tick, setTick] = useState(() => new Date())
   useEffect(() => {
@@ -27,6 +49,13 @@ export default function TopBar() {
   const timeStr = tick.toLocaleTimeString('en-IN', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   })
+
+  const cfg = checked ? STATUS_CFG[status] : {
+    pill:  'border-line bg-white dark:bg-surface',
+    dot:   'bg-gray-300 dark:bg-gray-600',
+    text:  'text-gray-500 dark:text-gray-400',
+    label: 'Connecting…',
+  }
 
   return (
     <header className="border-b border-line bg-paper/95 dark:bg-paper/95 backdrop-blur-sm sticky top-0 z-40">
@@ -78,22 +107,10 @@ export default function TopBar() {
           <div className="h-3.5 w-px bg-line" />
 
           {/* System status pill */}
-          <div className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${
-            !checked  ? 'border-line bg-white dark:bg-surface' :
-            online    ? 'border-success-200 dark:border-green-800 bg-success-50 dark:bg-green-900/30' :
-                        'border-warning-200 dark:border-amber-800 bg-warning-50 dark:bg-amber-900/30'
-          }`}>
-            <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
-              !checked ? 'bg-gray-300 dark:bg-gray-600' :
-              online   ? 'bg-success animate-pulse' :
-                         'bg-warning'
-            }`} />
-            <span className={`font-mono text-[10px] font-semibold ${
-              !checked ? 'text-gray-500 dark:text-gray-400' :
-              online   ? 'text-success-700 dark:text-green-400' :
-                         'text-warning-700 dark:text-amber-400'
-            }`}>
-              {!checked ? 'Connecting…' : online ? 'System Online' : 'Offline Mode'}
+          <div className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${cfg.pill}`}>
+            <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+            <span className={`font-mono text-[10px] font-semibold ${cfg.text}`}>
+              {cfg.label}
             </span>
           </div>
         </div>
@@ -114,19 +131,19 @@ export default function TopBar() {
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-violet-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
+          <Cpu size={9} className={status === 'healthy' ? 'text-violet-500' : 'text-gray-400 dark:text-gray-600'} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Claude AI {online ? 'Active' : 'Standby'}
+            {aiLabel || (online ? 'Local AI Engine' : 'AI Standby')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <Activity size={9} className="text-gray-400 dark:text-gray-600" />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Latency {online ? '42ms' : '—'}
+            Latency {online ? '< 5ms' : '—'}
           </span>
         </div>
         <div className="ml-auto font-mono text-[10px] text-gray-400 dark:text-gray-600">
-          PRAGMA v1.0.0 · RBI / SEBI / MCA Compliance Platform
+          PRAGMA v1.0.0 · Air-Gapped Compliance Intelligence · RBI / SEBI / MCA
         </div>
       </div>
     </header>

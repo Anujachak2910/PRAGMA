@@ -1,23 +1,24 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, CheckSquare, ScrollText,
-  Upload, Shield, Layers, PlayCircle,
+  Upload, Shield, Layers, PlayCircle, Zap,
 } from 'lucide-react'
 import { useAppContext } from '../../contexts/AppContext'
 
 const NAV_ITEMS = [
-  { to: '/',        label: 'Dashboard',     sub: 'Overview',      icon: LayoutDashboard, end: true },
-  { to: '/maps',    label: 'Action Points', sub: 'MAP Register',  icon: FileText },
-  { to: '/review',  label: 'AI Review',     sub: 'Extraction',    icon: Layers },
-  { to: '/approvals', label: 'Approvals',   sub: 'Review Queue',  icon: CheckSquare },
-  { to: '/events',  label: 'Audit Log',     sub: 'Event Ledger',  icon: ScrollText },
-  { to: '/upload',  label: 'New Circular',  sub: 'Intake',        icon: Upload },
+  { to: '/',          label: 'Dashboard',     sub: 'Overview',        icon: LayoutDashboard, end: true },
+  { to: '/maps',      label: 'Action Points', sub: 'MAP Register',    icon: FileText },
+  { to: '/simulate',  label: 'Impact Simulator', sub: 'Predictive AI',  icon: Zap },
+  { to: '/review',    label: 'AI Review',     sub: 'Extraction',      icon: Layers },
+  { to: '/approvals', label: 'Approvals',     sub: 'Review Queue',    icon: CheckSquare },
+  { to: '/events',    label: 'Audit Log',     sub: 'Event Ledger',    icon: ScrollText },
+  { to: '/upload',    label: 'New Circular',  sub: 'Intake',          icon: Upload },
 ]
 
 const DEMO_SCENARIOS = [
-  { id: 'rbi-cyber',       label: 'RBI Cybersecurity 2026',     sub: '8 MAPs · IT, Risk, Compliance' },
-  { id: 'sebi-cscrf',      label: 'SEBI CSCRF Framework',       sub: '6 MAPs · Legal, Treasury' },
-  { id: 'digital-lending', label: 'RBI Digital Lending Norms',  sub: 'Demo scenario' },
+  { id: 'rbi-cyber',       label: 'RBI Cybersecurity 2026',    sub: '8 MAPs · IT, Risk, Compliance' },
+  { id: 'sebi-cscrf',      label: 'SEBI CSCRF Framework',      sub: '6 MAPs · Legal, Treasury' },
+  { id: 'digital-lending', label: 'RBI Digital Lending Norms', sub: 'Demo scenario' },
 ]
 
 export default function Sidebar() {
@@ -36,7 +37,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-2 mb-3">
           <Shield size={14} className="text-brass flex-shrink-0" strokeWidth={2} />
           <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-brass">
-            Regulatory Register
+            Air-Gapped Intelligence
           </p>
         </div>
         <h1 className="font-serif text-[28px] font-semibold leading-none tracking-tight text-white">
@@ -125,7 +126,7 @@ export default function Sidebar() {
           Suraksha Cyber Hackathon 2026
         </p>
         <p className="mt-1 font-mono text-[9px] text-slate-700">
-          Powered by Claude · FastAPI · PostgreSQL
+          Local AI Engine · FastAPI · SQLite
         </p>
       </div>
     </aside>

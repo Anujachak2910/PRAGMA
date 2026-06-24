@@ -9,6 +9,7 @@ import ApprovalPanel from './pages/ApprovalPanel'
 import EventLog from './pages/EventLog'
 import CircularUpload from './pages/CircularUpload'
 import ExtractionReview from './pages/ExtractionReview'
+import SimulateView from './pages/SimulateView'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
               <Route path="/approvals" element={<ApprovalPanel />} />
               <Route path="/events"    element={<EventLog />} />
               <Route path="/upload"    element={<CircularUpload />} />
+              <Route path="/simulate"  element={<SimulateView />} />
             </Route>
           </Routes>
         </ErrorBoundary>

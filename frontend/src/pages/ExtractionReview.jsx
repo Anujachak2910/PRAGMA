@@ -306,7 +306,7 @@ export default function ExtractionReview() {
 
           <div className="border-t border-line px-5 py-2.5 flex-shrink-0">
             <p className="font-mono text-[10px] text-[#8b98aa]">
-              Click a MAP to highlight its source clause · AI extraction by Claude
+              Click a MAP to highlight its source clause · AI extraction by Local AI Engine
             </p>
           </div>
         </div>
