@@ -11,7 +11,7 @@ Valid status transitions:
   Pending → Rejected
 """
 
-from sqlalchemy import Column, String, Text, Date, DateTime, ForeignKey, Float
+from sqlalchemy import Column, String, Text, Date, DateTime, ForeignKey, Float, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -23,6 +23,13 @@ MAP_PRIORITIES = ["Critical", "High", "Medium", "Low"]
 
 class MAP(Base):
     __tablename__ = "maps"
+    __table_args__ = (
+        Index("ix_maps_circular_id",   "circular_id"),
+        Index("ix_maps_department_id", "department_id"),
+        Index("ix_maps_status",        "status"),
+        Index("ix_maps_deadline",      "deadline"),
+        Index("ix_maps_priority",      "priority"),
+    )
 
     id            = Column(UUIDType, primary_key=True, default=UUIDType.new)
     circular_id   = Column(UUIDType, ForeignKey("circulars.id",   ondelete="CASCADE"),  nullable=False)

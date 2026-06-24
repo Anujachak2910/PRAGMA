@@ -17,6 +17,8 @@ const CircularUpload    = lazy(() => import('./pages/CircularUpload'))
 const ExtractionReview  = lazy(() => import('./pages/ExtractionReview'))
 const SimulateView      = lazy(() => import('./pages/SimulateView'))
 const TraceabilityGraph = lazy(() => import('./pages/TraceabilityGraph'))
+const DiffView          = lazy(() => import('./pages/DiffView'))
+const ConflictMatrix    = lazy(() => import('./pages/ConflictMatrix'))
 
 function PageLoader() {
   return <Spinner label="Loading page…" />
@@ -37,6 +39,8 @@ function App() {
               <Route path="/upload"    element={<Suspense fallback={<PageLoader />}><CircularUpload /></Suspense>} />
               <Route path="/simulate"  element={<Suspense fallback={<PageLoader />}><SimulateView /></Suspense>} />
               <Route path="/trace"     element={<Suspense fallback={<PageLoader />}><TraceabilityGraph /></Suspense>} />
+              <Route path="/diff"      element={<Suspense fallback={<PageLoader />}><DiffView /></Suspense>} />
+              <Route path="/conflicts" element={<Suspense fallback={<PageLoader />}><ConflictMatrix /></Suspense>} />
             </Route>
           </Routes>
         </ErrorBoundary>

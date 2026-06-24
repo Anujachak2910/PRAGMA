@@ -5,14 +5,16 @@ import { User, Building2, Activity, Cpu, Shield } from 'lucide-react'
 import ThemeToggle from '../shared/ThemeToggle'
 
 const PAGES = {
-  '/':          { title: 'Command Dashboard',           ref: 'OVERVIEW'  },
-  '/maps':      { title: 'Action Point Register',       ref: 'REGISTER'  },
-  '/review':    { title: 'AI Extraction Review',        ref: 'REVIEW'    },
-  '/approvals': { title: 'Compliance Review Queue',     ref: 'QUEUE'     },
-  '/events':    { title: 'Audit Event Ledger',          ref: 'LEDGER'    },
-  '/upload':    { title: 'Circular Ingestion',          ref: 'INTAKE'    },
-  '/simulate':  { title: 'Compliance Impact Simulator', ref: 'SIMULATE'  },
-  '/trace':     { title: 'Compliance Traceability',     ref: 'TRACEABILITY' },
+  '/':          { title: 'Command Dashboard',              ref: 'OVERVIEW'     },
+  '/maps':      { title: 'Action Point Register',          ref: 'REGISTER'     },
+  '/review':    { title: 'AI Extraction Review',           ref: 'REVIEW'       },
+  '/approvals': { title: 'Compliance Review Queue',        ref: 'QUEUE'        },
+  '/events':    { title: 'Audit Event Ledger',             ref: 'LEDGER'       },
+  '/upload':    { title: 'Circular Ingestion',             ref: 'INTAKE'       },
+  '/simulate':  { title: 'Compliance Impact Simulator',    ref: 'SIMULATE'     },
+  '/trace':     { title: 'Compliance Traceability',        ref: 'TRACEABILITY' },
+  '/diff':      { title: 'Regulatory Change Diff Engine',  ref: 'DIFF'         },
+  '/conflicts': { title: 'Cross-Regulator Conflict Matrix',ref: 'CONFLICTS'    },
 }
 
 const STATUS_CFG = {

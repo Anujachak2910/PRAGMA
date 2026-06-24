@@ -86,7 +86,7 @@ app.include_router(api_router, prefix="/api/v1")
 async def health_check():
     """
     Tri-state health endpoint.
-    status: "ok" — API reachable, AI engine available
+    status: "ok"       — API reachable, AI engine available
     status: "degraded" — API reachable, AI running in rule-based fallback mode
     """
     try:
@@ -94,6 +94,12 @@ async def health_check():
         ai = get_engine_status()
     except Exception:
         ai = {"engine": "unknown", "model": None, "available": False, "label": "Unknown"}
+
+    try:
+        from app.services.ollama_service import get_cache_stats
+        cache = get_cache_stats()
+    except Exception:
+        cache = {}
 
     return {
         "status":       "ok",
@@ -104,4 +110,5 @@ async def health_check():
         "ai_available": ai.get("available", False),
         "ai_label":     ai.get("label", ""),
         "offline_mode": True,
+        "prompt_cache": cache,
     }

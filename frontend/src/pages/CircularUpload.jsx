@@ -75,15 +75,15 @@ function StageIndicator({ stage }) {
           <div
             key={s.id}
             className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-all duration-300 ${
-              done    ? 'border-success-200 bg-success-50' :
-              current ? 'border-brass/40    bg-brass-soft' :
-                        'border-line        bg-white opacity-40'
+              done    ? 'border-success-200 dark:border-green-800/60 bg-success-50 dark:bg-green-900/10' :
+              current ? 'border-brass/40 bg-brass-soft dark:bg-brass/10' :
+                        'border-line bg-white dark:bg-card opacity-40'
             }`}
           >
             <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full ${
               done    ? 'bg-success text-white'  :
               current ? 'bg-brass   text-white'  :
-                        'bg-gray-100 text-gray-400'
+                        'bg-gray-100 dark:bg-surface text-gray-400 dark:text-gray-600'
             }`}>
               {done ? (
                 <CheckCircle2 size={14} strokeWidth={2.5} />
@@ -117,7 +117,7 @@ function FileCard({ file, onRemove, disabled }) {
         <FileText size={18} className={cfg.icon} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold text-ink">{file.name}</p>
+        <p className="truncate text-[13px] font-semibold text-ink dark:text-[#e8edf5]">{file.name}</p>
         <div className="mt-0.5 flex items-center gap-2">
           <span className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider ${cfg.badge}`}>
             {cfg.label}
@@ -148,24 +148,24 @@ function DropZone({ dragOver, onDragOver, onDragLeave, onDrop, inputRef }) {
       onClick={() => inputRef.current?.click()}
       className={`flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors duration-200 ${
         dragOver
-          ? 'border-primary-400 bg-primary-50/40'
-          : 'border-line bg-paper/30 hover:border-primary-300 hover:bg-paper/50'
+          ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-900/10'
+          : 'border-line bg-paper/30 dark:bg-surface/20 hover:border-primary-300 hover:bg-paper/50 dark:hover:bg-surface/40'
       }`}
     >
       {dragOver ? (
         <>
-          <FilePlus2 size={28} className="text-primary-500" />
-          <p className="text-[13px] font-semibold text-primary-700">Drop to upload</p>
+          <FilePlus2 size={28} className="text-primary-500 dark:text-primary-400" />
+          <p className="text-[13px] font-semibold text-primary-700 dark:text-primary-300">Drop to upload</p>
         </>
       ) : (
         <>
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-line bg-white shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-line bg-white dark:bg-surface shadow-sm">
             <Upload size={20} className="text-gray-400" />
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-gray-700">
+            <p className="text-[13px] font-semibold text-gray-700 dark:text-[#e8edf5]">
               Drag & drop or{' '}
-              <span className="text-primary-600 underline underline-offset-2">choose file</span>
+              <span className="text-primary-600 dark:text-primary-400 underline underline-offset-2">choose file</span>
             </p>
             <p className="mt-1 text-[12px] text-gray-400">PDF, DOCX, DOC, TXT — up to 20 MB</p>
           </div>
@@ -517,71 +517,40 @@ export default function CircularUpload() {
               </div>
             )}
 
-            {/* Import URL tab */}
+            {/* Import URL tab — disabled in air-gapped mode */}
             {activeTab === 'url' && (
-              <div className="space-y-4 p-5">
+              <div className="flex flex-col items-center gap-4 p-8 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/20">
+                  <Globe size={22} className="text-amber-500 dark:text-amber-400" strokeWidth={1.5} />
+                </div>
                 <div>
-                  <label className="mb-1.5 block font-mono text-[10px] font-semibold uppercase tracking-wider text-[#8b98aa]">
-                    Circular URL
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      value={importUrl}
-                      onChange={(e) => {
-                        setImportUrl(e.target.value)
-                        setUrlContent(null)
-                        setUrlStatus(null)
-                        setUrlMsg('')
-                      }}
-                      disabled={submitting || urlFetching}
-                      placeholder="Paste RBI / SEBI / MCA circular URL or Google Drive link"
-                      className="min-w-0 flex-1 rounded-lg border border-line bg-paper/40 dark:bg-surface/60 px-3 py-2.5 text-sm text-ink dark:text-[#e8edf5] placeholder:text-[#8b98aa] focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:opacity-60"
-                    />
+                  <p className="text-[14px] font-semibold text-ink dark:text-[#e8edf5]">
+                    URL Import — Unavailable in Air-Gapped Mode
+                  </p>
+                  <p className="mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-[#8b98aa]">
+                    This system operates in a fully air-gapped environment with no internet access.
+                    External URL fetching is disabled for security compliance.
+                  </p>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-[#8b98aa]">Supported offline methods</p>
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={fetchUrl}
-                      disabled={!importUrl.trim() || submitting || urlFetching}
-                      className="inline-flex flex-shrink-0 items-center gap-2 rounded-lg border border-line bg-white dark:bg-surface px-4 py-2.5 text-[13px] font-medium text-gray-700 dark:text-[#8b98aa] transition-colors hover:bg-paper dark:hover:bg-card disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => switchTab('file')}
+                      className="flex items-center gap-1.5 rounded-lg border border-line bg-white dark:bg-surface px-3 py-1.5 font-mono text-[11px] text-ink dark:text-[#e8edf5] hover:bg-paper dark:hover:bg-card"
                     >
-                      {urlFetching
-                        ? <><Loader2 size={13} className="animate-spin text-gray-500" /> Fetching…</>
-                        : <><CloudDownload size={13} className="text-gray-500" /> Fetch Document</>
-                      }
+                      <Upload size={11} className="text-brass" />
+                      Upload File (PDF / DOCX / TXT)
+                    </button>
+                    <button
+                      onClick={() => switchTab('text')}
+                      className="flex items-center gap-1.5 rounded-lg border border-line bg-white dark:bg-surface px-3 py-1.5 font-mono text-[11px] text-ink dark:text-[#e8edf5] hover:bg-paper dark:hover:bg-card"
+                    >
+                      <FileText size={11} className="text-brass" />
+                      Paste Text
                     </button>
                   </div>
                 </div>
-
-                {gDrive && !urlStatus && (
-                  <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-blue-200 bg-white font-bold text-[10px] text-blue-600">
-                      G
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-semibold text-blue-800">Google Drive document detected</p>
-                      <p className="mt-0.5 text-[12px] leading-relaxed text-blue-600">
-                        Document will be fetched directly from Drive during processing. Ensure file
-                        sharing is set to <strong>"Anyone with the link"</strong>.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {urlMsg && (
-                  <div className={`flex items-start gap-2.5 rounded-lg border px-4 py-2.5 ${
-                    urlStatus === 'ok' ? 'border-success-200 bg-success-50' : 'border-amber-200 bg-amber-50'
-                  }`}>
-                    {urlStatus === 'ok'
-                      ? <CheckCircle2 size={14} className="mt-0.5 flex-shrink-0 text-success" />
-                      : <AlertCircle  size={14} className="mt-0.5 flex-shrink-0 text-amber-600" />
-                    }
-                    <p className={`text-[13px] ${urlStatus === 'ok' ? 'font-medium text-success-700' : 'text-amber-700'}`}>
-                      {urlMsg}
-                    </p>
-                  </div>
-                )}
-
-                <p className="font-mono text-[10px] text-[#8b98aa]">
-                  Supported: RBI · SEBI · MCA · IRDAI · NABARD portals · Google Drive public share links
-                </p>
               </div>
             )}
           </div>

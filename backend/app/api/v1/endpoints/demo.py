@@ -18,6 +18,7 @@ from app.models.event import Event
 from app.models.department import Department
 from app.services.event_service import log_event
 from app.services.ai_engine import reset_availability_cache
+from app.services.ollama_service import clear_cache as clear_prompt_cache
 
 router = APIRouter()
 
@@ -282,6 +283,7 @@ async def reset_demo(db: Session = Depends(get_db)):
     try:
         counts = _seed_demo_data(db)
         reset_availability_cache()   # re-probe Ollama on next extraction
+        clear_prompt_cache()         # flush prompt cache so fresh circulars re-invoke LLM
         return {
             "success": True,
             "message": "Demo environment reset to pristine state",

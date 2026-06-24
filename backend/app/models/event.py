@@ -11,7 +11,7 @@ Valid event_type values:
   map_completed | map_assigned | map_status_changed | demo_reset
 """
 
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -20,6 +20,11 @@ from app.database import Base, UUIDType
 
 class Event(Base):
     __tablename__ = "events"
+    __table_args__ = (
+        Index("ix_events_created_at",  "created_at"),
+        Index("ix_events_circular_id", "circular_id"),
+        Index("ix_events_map_id",      "map_id"),
+    )
 
     id          = Column(UUIDType, primary_key=True, default=UUIDType.new)
     circular_id = Column(UUIDType, ForeignKey("circulars.id", ondelete="SET NULL"), nullable=True)

@@ -23,8 +23,10 @@ class Settings(BaseSettings):
     OLLAMA_URL:     str = "http://localhost:11434"
     # Model priority: qwen3:8b > llama3.1:8b > phi3.5
     # System auto-selects best available model at startup
-    OLLAMA_MODEL:   str = "qwen3:8b"
-    OLLAMA_TIMEOUT: int = 180      # seconds — 8B on CPU: 60-120s per inference
+    OLLAMA_MODEL:         str = "qwen3:8b"
+    OLLAMA_TIMEOUT:       int = 180    # seconds — full timeout (last-resort cap)
+    OLLAMA_FAST_TIMEOUT:  int = 12     # seconds — primary model; exceed → switch to fallback
+    OLLAMA_FALLBACK_MODEL: str = "phi3.5"  # used when primary model exceeds OLLAMA_FAST_TIMEOUT
 
     # ── Legacy — Claude API (not used in offline mode) ────────────────────────
     ANTHROPIC_API_KEY: Optional[str] = None

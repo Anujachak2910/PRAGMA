@@ -14,6 +14,7 @@ from app.api.v1.endpoints import (
     departments,
     demo,
     simulate,
+    insights,
 )
 
 api_router = APIRouter()
@@ -25,3 +26,4 @@ api_router.include_router(events.router,      prefix="/events",     tags=["event
 api_router.include_router(departments.router, prefix="/departments",tags=["departments"])
 api_router.include_router(demo.router,        prefix="/demo",       tags=["demo"])
 api_router.include_router(simulate.router,    prefix="/simulate",   tags=["simulate"])
+api_router.include_router(insights.router,    prefix="/insights",   tags=["insights"])
