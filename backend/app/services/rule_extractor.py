@@ -181,6 +181,14 @@ def _find_source_clause(sentence: str, preceding_text: str) -> str:
 
 def _clean_action(sentence: str) -> str:
     """Strip boilerplate preamble and return a clean imperative action phrase."""
+    text = sentence.strip()
+
+    # Strip leading clause/section/para references: "Para 4.2: ...", "Section 5: ..."
+    text = re.sub(
+        r"^(?:Section|Clause|Para(?:graph)?|Rule|Article|Regulation|Annex(?:ure)?)\s*[\d.]+(?:\(\w+\))*\s*[:\-–—]\s*",
+        "", text, flags=re.IGNORECASE
+    ).strip()
+
     preambles = [
         r"^Regulated\s+entities?\s+shall\s+",
         r"^All\s+(?:banks?|entities?|institutions?|regulated\s+entities?)\s+shall\s+",
@@ -190,7 +198,6 @@ def _clean_action(sentence: str) -> str:
         r"^It\s+is\s+(?:mandatory|required)\s+(?:that|for)\s+",
         r"^(?:Each|Every)\s+regulated\s+entity\s+shall\s+",
     ]
-    text = sentence.strip()
     for pat in preambles:
         text = re.sub(pat, "", text, flags=re.IGNORECASE).strip()
     # Capitalize first letter
@@ -238,6 +245,8 @@ def _validate_and_normalise(maps: list[dict]) -> list[dict]:
             "priority":         priority,
             "deadline":         deadline,
             "validation_notes": (m.get("validation_notes") or "").strip(),
+            "source_clause":    m.get("source_clause"),
+            "confidence_score": m.get("confidence_score"),
         })
     return result
 
@@ -291,12 +300,25 @@ def extract_maps(circular_text: str) -> list[dict]:
         deadline = _extract_deadline(sent)
         clause   = _find_source_clause(sent, preceding)
 
+        # Confidence scoring: deterministic signals → [0.55, 0.95]
+        score = 0.60
+        if clause != "Regulatory circular":   score += 0.10  # specific clause found
+        if deadline is not None:              score += 0.10  # explicit timeline
+        if len(action) > 60:                  score += 0.05  # specific action phrase
+        # Department keyword strength
+        text_l = sent.lower()
+        dept_hits = sum(1 for kw in _DEPT_KEYWORDS.get(dept, []) if kw in text_l)
+        if dept_hits >= 2:                    score += 0.05
+        if priority == "Critical":            score += 0.05
+
         maps.append({
             "action":           action,
             "department":       dept,
             "priority":         priority,
             "deadline":         deadline,
-            "validation_notes": f"{clause} — extracted via rule-based analysis (offline mode).",
+            "source_clause":    clause,
+            "confidence_score": round(min(score, 0.95), 2),
+            "validation_notes": f"{clause} — {dept} obligation identified via PRAGMA Intelligence Engine; priority {priority} based on mandate language and timeline signals.",
         })
 
     # Absolute fallback — always return at least one MAP
@@ -307,6 +329,8 @@ def extract_maps(circular_text: str) -> list[dict]:
             "department":       "Compliance",
             "priority":         "High",
             "deadline":         None,
+            "source_clause":    "Full circular",
+            "confidence_score": 0.40,
             "validation_notes": "Full circular — manual review required. No specific obligation clauses auto-detected.",
         })
 

@@ -69,6 +69,8 @@ Return a JSON array. Each element must have exactly these fields:
   "department": "one of: IT, Compliance, Risk, Treasury, Legal",
   "priority": "one of: Critical, High, Medium, Low",
   "deadline": "YYYY-MM-DD if stated or inferrable from the circular, otherwise null",
+  "source_clause": "the specific section, clause, paragraph, or annex reference (e.g. Para 4.2, Section 5(a)). Write Regulatory circular if not referenced.",
+  "confidence_score": 0.85,
   "validation_notes": "cite the specific section or clause that mandates this, \
 and explain your department and priority reasoning in one sentence"
 }}
@@ -77,6 +79,7 @@ Rules:
 - Extract between 3 and 8 MAPs. Prefer precision over volume.
 - Each MAP must be independently actionable by a single department.
 - Deadlines must be real dates from the circular — do not invent them.
+- confidence_score must be a float between 0.0 and 1.0 reflecting extraction certainty.
 - Return ONLY the JSON array. No prose, no markdown, no code fences."""
 
 RETRY_SUFFIX = (
@@ -225,6 +228,25 @@ def extract_maps(circular_text: str) -> list[dict]:
     if not isinstance(maps, list) or not maps:
         raise ValueError("Ollama returned empty or non-list MAP response")
 
+    # Add extraction engine metadata before validation
+    model = get_active_model()
+    for m in maps:
+        # Clamp LLM-provided confidence to [0.0, 1.0]
+        raw_conf = m.get("confidence_score")
+        if isinstance(raw_conf, (int, float)):
+            m["confidence_score"] = round(min(max(float(raw_conf), 0.0), 1.0), 2)
+        elif raw_conf is None:
+            m["confidence_score"] = 0.75  # default for LLM without explicit score
+        else:
+            try:
+                m["confidence_score"] = round(min(max(float(raw_conf), 0.0), 1.0), 2)
+            except (TypeError, ValueError):
+                m["confidence_score"] = 0.75
+
+        # Normalise source_clause
+        clause = m.get("source_clause") or "Regulatory circular"
+        m["source_clause"] = clause.strip()
+
     validated = _validate_and_normalise(maps)
-    logger.info("Ollama extracted %d MAPs using model %s", len(validated), get_active_model())
+    logger.info("Ollama (%s) extracted %d MAPs", model, len(validated))
     return validated

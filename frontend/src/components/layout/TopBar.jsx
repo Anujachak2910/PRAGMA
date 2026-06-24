@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useBackendStatus } from '../../hooks/useBackendStatus'
-import { User, Building2, Activity, Cpu } from 'lucide-react'
+import { User, Building2, Activity, Cpu, Shield } from 'lucide-react'
 import ThemeToggle from '../shared/ThemeToggle'
 
 const PAGES = {
-  '/':          { title: 'Command Dashboard',       ref: 'OVERVIEW' },
-  '/maps':      { title: 'Action Point Register',   ref: 'REGISTER' },
-  '/review':    { title: 'AI Extraction Review',    ref: 'REVIEW'   },
-  '/approvals': { title: 'Compliance Review Queue', ref: 'QUEUE'    },
-  '/events':    { title: 'Audit Event Ledger',      ref: 'LEDGER'   },
-  '/upload':    { title: 'Circular Ingestion',      ref: 'INTAKE'   },
-  '/simulate':  { title: 'Compliance Impact Simulator', ref: 'SIMULATE' },
+  '/':          { title: 'Command Dashboard',           ref: 'OVERVIEW'  },
+  '/maps':      { title: 'Action Point Register',       ref: 'REGISTER'  },
+  '/review':    { title: 'AI Extraction Review',        ref: 'REVIEW'    },
+  '/approvals': { title: 'Compliance Review Queue',     ref: 'QUEUE'     },
+  '/events':    { title: 'Audit Event Ledger',          ref: 'LEDGER'    },
+  '/upload':    { title: 'Circular Ingestion',          ref: 'INTAKE'    },
+  '/simulate':  { title: 'Compliance Impact Simulator', ref: 'SIMULATE'  },
+  '/trace':     { title: 'Compliance Traceability',     ref: 'TRACEABILITY' },
 }
 
 const STATUS_CFG = {
-  healthy:  {
+  healthy: {
     pill:  'border-success-200 dark:border-green-800 bg-success-50 dark:bg-green-900/30',
     dot:   'bg-success animate-pulse',
     text:  'text-success-700 dark:text-green-400',
@@ -25,19 +26,26 @@ const STATUS_CFG = {
     pill:  'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30',
     dot:   'bg-warning animate-pulse',
     text:  'text-warning-700 dark:text-amber-400',
-    label: 'Degraded Mode',
+    label: 'Degraded',
   },
   offline: {
-    pill:  'border-warning-200 dark:border-amber-800 bg-warning-50 dark:bg-amber-900/30',
+    pill:  'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20',
     dot:   'bg-gray-300 dark:bg-gray-600',
-    text:  'text-warning-700 dark:text-amber-400',
-    label: 'Offline Mode',
+    text:  'text-red-600 dark:text-red-400',
+    label: 'Backend Offline',
   },
 }
 
+const CONNECTING_CFG = {
+  pill:  'border-line bg-white dark:bg-surface',
+  dot:   'bg-gray-300 dark:bg-gray-600 animate-pulse',
+  text:  'text-gray-500 dark:text-gray-400',
+  label: 'Connecting…',
+}
+
 export default function TopBar() {
-  const { pathname }                    = useLocation()
-  const page                            = PAGES[pathname] || { title: 'PRAGMA', ref: '—' }
+  const { pathname }                      = useLocation()
+  const page                              = PAGES[pathname] || { title: 'PRAGMA', ref: '—' }
   const { status, aiLabel, online, checked } = useBackendStatus()
 
   const [tick, setTick] = useState(() => new Date())
@@ -50,12 +58,10 @@ export default function TopBar() {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   })
 
-  const cfg = checked ? STATUS_CFG[status] : {
-    pill:  'border-line bg-white dark:bg-surface',
-    dot:   'bg-gray-300 dark:bg-gray-600',
-    text:  'text-gray-500 dark:text-gray-400',
-    label: 'Connecting…',
-  }
+  // status is null while first ping is in-flight — show Connecting
+  const cfg = (checked && status) ? STATUS_CFG[status] : CONNECTING_CFG
+
+  const resolvedAiLabel = aiLabel || (online ? 'PRAGMA Intelligence Engine' : (checked ? '—' : '…'))
 
   return (
     <header className="border-b border-line bg-paper/95 dark:bg-paper/95 backdrop-blur-sm sticky top-0 z-40">
@@ -121,25 +127,25 @@ export default function TopBar() {
         <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-success' : 'bg-gray-300 dark:bg-gray-700'}`} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Backend {online ? 'Healthy' : 'Offline'}
+            Backend {online ? 'Healthy' : (checked ? 'Offline' : '…')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-success' : 'bg-gray-300 dark:bg-gray-700'}`} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Database {online ? 'Connected' : 'Unreachable'}
+            SQLite {online ? 'Connected' : (checked ? 'Unreachable' : '…')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Cpu size={9} className={status === 'healthy' ? 'text-violet-500' : 'text-gray-400 dark:text-gray-600'} />
+          <Cpu size={9} className={online ? 'text-brass' : 'text-gray-400 dark:text-gray-600'} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            {aiLabel || (online ? 'Local AI Engine' : 'AI Standby')}
+            {resolvedAiLabel}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Activity size={9} className="text-gray-400 dark:text-gray-600" />
+          <Shield size={9} className={online ? 'text-violet-500' : 'text-gray-400 dark:text-gray-600'} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Latency {online ? '< 5ms' : '—'}
+            {online ? 'Air-Gapped Mode' : (checked ? 'System Down' : 'Initializing…')}
           </span>
         </div>
         <div className="ml-auto font-mono text-[10px] text-gray-400 dark:text-gray-600">

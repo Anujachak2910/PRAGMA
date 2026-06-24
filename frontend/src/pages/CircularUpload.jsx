@@ -7,9 +7,9 @@
  * URL tab accepts any web URL or Google Drive public link.
  */
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { uploadCircular } from '../api/circulars'
+import { uploadCircular, getEnhancementStatus } from '../api/circulars'
 import api from '../services/api'
 import { MOCK_MAPS } from '../utils/mockData'
 import { useAppContext } from '../contexts/AppContext'
@@ -25,7 +25,7 @@ import {
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms))
 
-const MAX_FILE_SIZE  = 20 * 1024 * 1024  // 20 MB
+const MAX_FILE_SIZE  = 10 * 1024 * 1024  // 10 MB
 const ACCEPTED_EXT   = new Set(['pdf', 'docx', 'doc', 'txt'])
 const ALL_REGULATORS = ['RBI', 'SEBI', 'MCA', 'IRDAI', 'NABARD']
 
@@ -216,6 +216,11 @@ export default function CircularUpload() {
   const [error, setError]               = useState('')
   const [extractedResult, setExtracted] = useState(null)
 
+  /* LLM enhancement polling */
+  const [enhancementStatus, setEnhancementStatus] = useState(null)
+  const [enhancedModel,     setEnhancedModel]     = useState(null)
+  const enhancePollRef = useRef(null)
+
   const submitting = stage !== null
 
   /* ── Derived ── */
@@ -229,6 +234,32 @@ export default function CircularUpload() {
     return false
   })()
 
+  /* ── Enhancement polling — poll every 8s when pending ── */
+  useEffect(() => {
+    const circularId = extractedResult?.circular_id
+    if (!circularId || extractedResult?.enhancement_status === 'none') return
+
+    if (enhancementStatus === 'complete' || enhancementStatus === 'failed') return
+
+    const poll = async () => {
+      try {
+        const res = await getEnhancementStatus(circularId)
+        setEnhancementStatus(res.status)
+        if (res.status === 'complete') {
+          setEnhancedModel(res.model)
+          bustPrefix('maps:')
+          bustPrefix('circulars:')
+        }
+      } catch {
+        // silent — backend may not be up
+      }
+    }
+
+    poll() // immediate first check
+    enhancePollRef.current = setInterval(poll, 8_000)
+    return () => clearInterval(enhancePollRef.current)
+  }, [extractedResult?.circular_id, enhancementStatus, extractedResult?.enhancement_status])
+
   /* ── File handlers ── */
   const acceptFile = useCallback((file) => {
     if (!file) return
@@ -238,7 +269,7 @@ export default function CircularUpload() {
       return
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError(`File is ${formatBytes(file.size)} — exceeds the 20 MB limit.`)
+      setError(`File is ${formatBytes(file.size)} — exceeds the 10 MB limit.`)
       return
     }
     setError('')
@@ -583,11 +614,29 @@ export default function CircularUpload() {
           ) : (
             /* ── Document Intelligence Report (Phase 5) ── */
             <div className="animate-fadeIn space-y-4 rounded-xl border border-success-200 dark:border-green-800/60 bg-success-50/40 dark:bg-green-900/10 p-5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <ShieldCheck size={16} className="flex-shrink-0 text-success dark:text-green-400" />
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-success-700 dark:text-green-400">
                   Document Intelligence Report
                 </p>
+                {/* LLM enhancement status badge */}
+                {extractedResult?.enhancement_status === 'pending' && enhancementStatus !== 'complete' && enhancementStatus !== 'failed' && (
+                  <span className="ml-auto flex items-center gap-1.5 rounded-full border border-violet-200 dark:border-violet-700/60 bg-violet-50 dark:bg-violet-900/20 px-2.5 py-1 font-mono text-[9px] font-semibold text-violet-700 dark:text-violet-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
+                    AI Deepening Analysis…
+                  </span>
+                )}
+                {enhancementStatus === 'complete' && (
+                  <span className="ml-auto flex items-center gap-1.5 rounded-full border border-success-200 dark:border-green-700/60 bg-success-50 dark:bg-green-900/20 px-2.5 py-1 font-mono text-[9px] font-semibold text-success-700 dark:text-green-400">
+                    <Sparkles size={9} className="text-success dark:text-green-400" />
+                    AI Enhanced {enhancedModel ? `· ${enhancedModel}` : ''}
+                  </span>
+                )}
+                {enhancementStatus === 'failed' && (
+                  <span className="ml-auto flex items-center gap-1.5 rounded-full border border-line bg-white dark:bg-surface px-2.5 py-1 font-mono text-[9px] text-[#8b98aa]">
+                    Rule-Based · AI Enhancement Unavailable
+                  </span>
+                )}
               </div>
 
               <div className="rounded-lg border border-line bg-white px-4 py-3 dark:bg-card">
@@ -733,7 +782,7 @@ export default function CircularUpload() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 font-mono text-[10px] text-gray-400">Maximum file size: 20 MB</p>
+            <p className="mt-3 font-mono text-[10px] text-gray-400">Maximum file size: 10 MB</p>
           </div>
 
           <div className="rounded-xl border border-line bg-white dark:bg-card p-5">
@@ -759,8 +808,9 @@ export default function CircularUpload() {
                   Local AI Engine
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed text-violet-600 dark:text-violet-400">
-                  PRAGMA uses an offline AI model (Ollama / phi3.5) to parse regulatory language, identify
-                  compliance obligations, and estimate implementation timelines.
+                  PRAGMA uses the deterministic PRAGMA Intelligence Engine to parse regulatory language,
+                  identify compliance obligations, and estimate implementation timelines — fully offline,
+                  sub-second, 100% explainable.
                 </p>
               </div>
             </div>

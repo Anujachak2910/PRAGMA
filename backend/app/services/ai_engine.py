@@ -85,7 +85,7 @@ def extract_maps(circular_text: str) -> tuple[list[dict], str]:
 def get_engine_status() -> dict:
     """
     Return current AI engine status for the /health endpoint.
-    Called cheaply — does NOT re-ping Ollama if we already know its state.
+    Never blocks — uses cached Ollama state, never re-pings mid-health-check.
     """
     global _ollama_ok
 
@@ -94,29 +94,29 @@ def get_engine_status() -> dict:
             "engine":    "rule_based",
             "model":     None,
             "available": True,
-            "label":     "Rule-Based Extraction",
+            "label":     "PRAGMA Intelligence Engine",
         }
 
-    # Check Ollama availability (cached)
-    try:
-        from app.services import ollama_service
-        reachable = _ollama_ok if _ollama_ok is not None else ollama_service.is_available()
-    except Exception:
-        reachable = False
+    # Only use cached state — never re-ping Ollama from within a health check.
+    # _ollama_ok is updated lazily on the first extraction call.
+    reachable = _ollama_ok is True  # None = unknown = treat as not-yet-checked
 
     if reachable:
+        from app.services import ollama_service
+        model = ollama_service.get_active_model() or settings.OLLAMA_MODEL
         return {
             "engine":    "ollama",
-            "model":     settings.OLLAMA_MODEL,
+            "model":     model,
             "available": True,
-            "label":     f"Local AI ({settings.OLLAMA_MODEL})",
+            "label":     f"Ollama / {model}",
         }
 
+    # Ollama not yet confirmed reachable — rule-based is active
     return {
         "engine":    "rule_based",
         "model":     None,
         "available": True,
-        "label":     "Rule-Based (Ollama offline)",
+        "label":     "PRAGMA Intelligence Engine",
     }
 
 
@@ -124,3 +124,16 @@ def reset_availability_cache() -> None:
     """Force re-check of Ollama availability on next extraction call."""
     global _ollama_ok
     _ollama_ok = None
+
+
+def notify_ollama_success() -> None:
+    """Called by enhancement_service after a successful Ollama extraction.
+    Updates the health endpoint to reflect Ollama availability without re-pinging."""
+    global _ollama_ok
+    _ollama_ok = True
+
+
+def notify_ollama_failure() -> None:
+    """Called by enhancement_service after an Ollama failure."""
+    global _ollama_ok
+    _ollama_ok = False

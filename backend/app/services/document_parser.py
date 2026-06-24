@@ -17,7 +17,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def parse_pdf(content: bytes) -> str:
+def parse_pdf(content: bytes, max_pages: int = 100) -> str:
     try:
         import fitz  # PyMuPDF
     except ImportError:
@@ -27,8 +27,11 @@ def parse_pdf(content: bytes) -> str:
 
     text_parts = []
     with fitz.open(stream=content, filetype="pdf") as doc:
-        for page_num, page in enumerate(doc):
-            page_text = page.get_text("text")
+        total = len(doc)
+        if total > max_pages:
+            logger.warning("PDF has %d pages; truncating to first %d", total, max_pages)
+        for page_num in range(min(total, max_pages)):
+            page_text = doc[page_num].get_text("text")
             if page_text.strip():
                 text_parts.append(page_text)
 
@@ -65,7 +68,7 @@ def parse_txt(content: bytes) -> str:
     raise ValueError("Could not decode text file with any common encoding.")
 
 
-def parse_document(filename: str, content: bytes) -> str:
+def parse_document(filename: str, content: bytes, max_pages: int = 100) -> str:
     """
     Parse any supported document format to plain text.
 
@@ -83,7 +86,7 @@ def parse_document(filename: str, content: bytes) -> str:
     ext = Path(filename).suffix.lower().lstrip(".")
 
     if ext == "pdf":
-        text = parse_pdf(content)
+        text = parse_pdf(content, max_pages=max_pages)
     elif ext in ("docx", "doc"):
         text = parse_docx(content)
     elif ext == "txt":
