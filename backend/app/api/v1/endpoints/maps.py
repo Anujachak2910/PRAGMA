@@ -1,13 +1,10 @@
 """
 PRAGMA — MAPs Endpoints
 
-Owner: Diyasha (Backend APIs)
-Milestone: M2
-
 Endpoints:
   GET   /maps                   — List all MAPs (filter: status, department, priority, circular_id)
   GET   /maps/{id}              — Get single MAP with approval history
-  PATCH /maps/{id}/status       — Department marks MAP as In Progress / Completed
+  PATCH /maps/{id}/status       — Update MAP status (In Progress / Completed)
 """
 
 from fastapi import APIRouter, HTTPException, Depends

@@ -1,11 +1,4 @@
-"""
-PRAGMA — Shared Utility Helpers
-
-Owner: Any backend contributor
-Milestone: Ongoing
-
-Add small, reusable utilities here that don't belong in a specific service.
-"""
+"""PRAGMA — Shared Utility Helpers"""
 
 import uuid
 
@@ -17,6 +10,3 @@ def is_valid_uuid(value: str) -> bool:
         return True
     except ValueError:
         return False
-
-
-# TODO: Add additional helpers as needed during M2/M3
