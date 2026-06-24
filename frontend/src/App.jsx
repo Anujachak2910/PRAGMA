@@ -19,6 +19,7 @@ const SimulateView      = lazy(() => import('./pages/SimulateView'))
 const TraceabilityGraph = lazy(() => import('./pages/TraceabilityGraph'))
 const DiffView          = lazy(() => import('./pages/DiffView'))
 const ConflictMatrix    = lazy(() => import('./pages/ConflictMatrix'))
+const CostIntelligence  = lazy(() => import('./pages/CostIntelligence'))
 
 function PageLoader() {
   return <Spinner label="Loading page…" />
@@ -41,6 +42,7 @@ function App() {
               <Route path="/trace"     element={<Suspense fallback={<PageLoader />}><TraceabilityGraph /></Suspense>} />
               <Route path="/diff"      element={<Suspense fallback={<PageLoader />}><DiffView /></Suspense>} />
               <Route path="/conflicts" element={<Suspense fallback={<PageLoader />}><ConflictMatrix /></Suspense>} />
+              <Route path="/cost"      element={<Suspense fallback={<PageLoader />}><CostIntelligence /></Suspense>} />
             </Route>
           </Routes>
         </ErrorBoundary>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useMaps } from '../hooks/useMaps'
@@ -12,8 +12,9 @@ import ResolutionFunnel from '../components/shared/ResolutionFunnel'
 import UpcomingDeadlines from '../components/shared/UpcomingDeadlines'
 import AlertBanner from '../components/shared/AlertBanner'
 import { SkeletonMetricCard } from '../components/shared/Skeleton'
+import { getPortfolioCost } from '../api/insights'
 import { formatDate } from '../utils/formatters'
-import { AlertTriangle, Clock, TrendingUp, ShieldCheck, Layers } from 'lucide-react'
+import { AlertTriangle, Clock, TrendingUp, ShieldCheck, Layers, DollarSign, ArrowRight } from 'lucide-react'
 
 const sk = (s) => (s || '').toString().trim().toUpperCase().replace(/\s+/g, '_')
 
@@ -191,6 +192,107 @@ function DeptRiskHeatmap({ maps }) {
       <p className="mt-3 font-mono text-[10px] text-[#8b98aa]">
         Bar = avg. risk score across all MAPs in department
       </p>
+    </div>
+  )
+}
+
+const fmtCrore = (n) => {
+  if (!n) return '₹0'
+  if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(1)} Cr`
+  if (n >= 100_000)    return `₹${(n / 100_000).toFixed(1)}L`
+  return `₹${Number(n).toLocaleString('en-IN')}`
+}
+
+function ComplianceInvestmentWidget() {
+  const navigate = useNavigate()
+  const [data, setData]       = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getPortfolioCost()
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading || !data || !data.summary.total_cost_inr) return null
+
+  const { summary, department_breakdown } = data
+  const maxCost = Math.max(...(department_breakdown || []).map((d) => d.total_cost), 1)
+
+  const DEPT_COLORS = {
+    IT: '#2B4A8F', Compliance: '#c69b4f', Risk: '#7C3AED',
+    Legal: '#0891B2', Treasury: '#065F46',
+  }
+
+  return (
+    <div className="rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3">
+        <DollarSign size={13} className="text-brass flex-shrink-0" />
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
+          Compliance Investment Intelligence
+        </p>
+        <button
+          onClick={() => navigate('/cost')}
+          className="ml-auto flex items-center gap-1 font-mono text-[9px] text-primary-600 dark:text-primary-400 hover:underline"
+        >
+          Full Analysis <ArrowRight size={9} />
+        </button>
+      </div>
+      <div className="px-5 py-4">
+        {/* Top-line numbers */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-wide text-[#8b98aa] mb-0.5">Total Cost</p>
+            <p className="font-serif text-2xl font-semibold tabular-nums text-ink dark:text-[#e8edf5]">
+              {fmtCrore(summary.total_cost_inr)}
+            </p>
+            <p className="font-mono text-[9px] text-[#8b98aa]">{summary.active_maps} active MAPs</p>
+          </div>
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-wide text-[#8b98aa] mb-0.5">Penalty Exposure</p>
+            <p className="font-serif text-2xl font-semibold tabular-nums text-red-600 dark:text-red-400">
+              {fmtCrore(summary.total_penalty_inr)}
+            </p>
+            <p className="font-mono text-[9px] text-[#8b98aa]">if non-compliant</p>
+          </div>
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-wide text-[#8b98aa] mb-0.5">Portfolio ROI</p>
+            <p className={`font-serif text-2xl font-semibold tabular-nums ${
+              summary.portfolio_roi_x >= 2
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-amber-600 dark:text-amber-400'
+            }`}>
+              {summary.portfolio_roi_x}×
+            </p>
+            <p className="font-mono text-[9px] text-[#8b98aa]">penalty ÷ cost</p>
+          </div>
+        </div>
+        {/* Dept bars */}
+        <div className="space-y-2">
+          {(department_breakdown || []).slice(0, 4).map((d) => {
+            const pct   = (d.total_cost / maxCost) * 100
+            const color = DEPT_COLORS[d.department] || '#8b98aa'
+            return (
+              <div key={d.department} className="flex items-center gap-2">
+                <span className="w-20 flex-shrink-0 font-mono text-[10px] text-[#8b98aa]">{d.department}</span>
+                <div className="flex-1 h-2 rounded-full bg-line dark:bg-surface overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${Math.max(pct, 3)}%`, backgroundColor: color }}
+                  />
+                </div>
+                <span className="w-14 flex-shrink-0 text-right font-mono text-[10px] text-ink dark:text-[#e8edf5]">
+                  {fmtCrore(d.total_cost)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+        <p className="mt-3 font-mono text-[9px] text-[#8b98aa]">
+          Based on industry benchmark rate cards · {summary.total_person_days} person-days total
+        </p>
+      </div>
     </div>
   )
 }
@@ -391,6 +493,9 @@ export default function Dashboard() {
         <ResolutionFunnel maps={maps} />
         <AIExtractionPanel maps={maps} />
       </div>
+
+      {/* ── Compliance Investment Intelligence widget ── */}
+      <ComplianceInvestmentWidget />
 
       {/* ── Audit activity + deadlines ── */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">

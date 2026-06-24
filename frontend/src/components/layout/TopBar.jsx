@@ -15,6 +15,7 @@ const PAGES = {
   '/trace':     { title: 'Compliance Traceability',        ref: 'TRACEABILITY' },
   '/diff':      { title: 'Regulatory Change Diff Engine',  ref: 'DIFF'         },
   '/conflicts': { title: 'Cross-Regulator Conflict Matrix',ref: 'CONFLICTS'    },
+  '/cost':      { title: 'Compliance Cost Intelligence',   ref: 'COST-INTEL'   },
 }
 
 const STATUS_CFG = {

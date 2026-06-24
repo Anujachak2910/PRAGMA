@@ -1,8 +1,14 @@
 import { useEffect, useRef } from 'react'
 import {
   X, FileText, Brain, Building2, AlertTriangle,
-  Sparkles, FolderOpen, ExternalLink, BookOpen,
+  Sparkles, FolderOpen, ExternalLink, BookOpen, Quote, Microscope,
 } from 'lucide-react'
+
+const PROVENANCE_METHOD_LABEL = {
+  clause_anchored:  'Clause-Anchored Search',
+  keyword_match:    'Keyword Overlap Match',
+  sentence_jaccard: 'Semantic Similarity Match',
+}
 
 const EVIDENCE_ICON = {
   policy:      { icon: FileText,     cls: 'text-blue-500 dark:text-blue-400',     bg: 'bg-blue-50 dark:bg-blue-900/30'    },
@@ -98,8 +104,39 @@ export default function TraceabilityDrawer({ map, circular, onClose }) {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
 
-          {/* 1. Original Clause */}
-          {map.clause_text && (
+          {/* 1. Clause Evidence (provenance_service output) */}
+          {map.evidence_quote && (
+            <Section icon={Microscope} title="Clause Evidence — Exact Source Text" accent>
+              <blockquote className="border-l-2 border-violet-300 dark:border-violet-700 pl-3 mb-2">
+                <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-[#e8edf5]/80 italic">
+                  "{map.evidence_quote}"
+                </p>
+              </blockquote>
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                {circular && (
+                  <div className="flex items-center gap-1.5">
+                    <Building2 size={10} className="text-[#8b98aa]" />
+                    <span className="font-mono text-[10px] text-[#8b98aa]">
+                      {circular.source} — {circular.title}
+                    </span>
+                  </div>
+                )}
+                {map.provenance_method && (
+                  <span className="rounded border border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 font-mono text-[9px] text-violet-600 dark:text-violet-400">
+                    {PROVENANCE_METHOD_LABEL[map.provenance_method] || map.provenance_method}
+                  </span>
+                )}
+                {map.evidence_similarity != null && (
+                  <span className="font-mono text-[10px] text-[#8b98aa]">
+                    {Math.round(map.evidence_similarity * 100)}% match confidence
+                  </span>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* 1b. Original Clause (fallback when no provenance) */}
+          {!map.evidence_quote && map.clause_text && (
             <Section icon={BookOpen} title="Original Regulatory Clause" accent>
               <blockquote className="border-l-2 border-primary-300 dark:border-primary-700 pl-3">
                 <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-[#e8edf5]/80 italic">

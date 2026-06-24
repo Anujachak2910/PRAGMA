@@ -2,13 +2,14 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, CheckSquare, ScrollText,
   Upload, Shield, Layers, PlayCircle, Zap, GitBranch,
-  GitCompare, AlertOctagon,
+  GitCompare, AlertOctagon, DollarSign,
 } from 'lucide-react'
 import { useAppContext } from '../../contexts/AppContext'
 
 const NAV_ITEMS = [
   { to: '/',          label: 'Dashboard',       sub: 'Overview',          icon: LayoutDashboard, end: true },
   { to: '/maps',      label: 'Action Points',   sub: 'MAP Register',      icon: FileText },
+  { to: '/cost',      label: 'Cost Intelligence',sub: 'Financial Burden',  icon: DollarSign },
   { to: '/simulate',  label: 'Impact Simulator',sub: 'Predictive AI',     icon: Zap },
   { to: '/diff',      label: 'Change Diff',     sub: 'Version Analysis',  icon: GitCompare },
   { to: '/conflicts', label: 'Conflict Matrix', sub: 'Cross-Regulator',   icon: AlertOctagon },

@@ -11,7 +11,7 @@ Valid status transitions:
   Pending → Rejected
 """
 
-from sqlalchemy import Column, String, Text, Date, DateTime, ForeignKey, Float, Index
+from sqlalchemy import Column, String, Text, Date, DateTime, ForeignKey, Float, Integer, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -43,6 +43,13 @@ class MAP(Base):
 
     confidence_score = Column(Float,   nullable=True)
     source_clause    = Column(Text,    nullable=True)
+
+    # Clause provenance — populated after MAP creation by provenance_service
+    evidence_quote        = Column(Text,    nullable=True)
+    evidence_start_offset = Column(Integer, nullable=True)
+    evidence_end_offset   = Column(Integer, nullable=True)
+    evidence_similarity   = Column(Float,   nullable=True)
+    provenance_method     = Column(String,  nullable=True)  # clause_anchored | keyword_match | sentence_jaccard
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

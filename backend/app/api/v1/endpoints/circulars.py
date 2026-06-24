@@ -22,6 +22,7 @@ from app.models.circular import Circular
 from app.schemas.circular import CircularUploadRequest, CircularOut, CircularSummaryOut
 from app.services.map_service import create_maps_from_extraction
 from app.services.event_service import log_event
+from app.services.rule_extractor import extract_maps
 
 router = APIRouter()
 
@@ -79,12 +80,11 @@ def _persist_and_extract(
     Shared logic: save circular → rule-based extraction → return immediately.
     If BackgroundTasks provided and Ollama is configured, kick off async LLM enhancement.
     """
-    from app.services import rule_extractor as _rb
     from app.services.enhancement_service import run_enhancement, get_status
     from app.config import settings
 
     # ── Rule-based extraction (always synchronous, <1s) ───────────────────────
-    raw_maps = _rb.extract_maps(content)
+    raw_maps = extract_maps(content)
     engine_used = "rule_based"
 
     circular = Circular(title=title, source=source, content=content, status="processed")

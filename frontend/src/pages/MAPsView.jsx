@@ -13,8 +13,14 @@ import { DEPARTMENTS } from '../utils/constants'
 import {
   Search, ChevronUp, ChevronDown, SlidersHorizontal, X,
   Copy, Check, ChevronRight, Sparkles, Building2, Clock,
-  Brain,
+  Brain, Quote, Microscope,
 } from 'lucide-react'
+
+const PROVENANCE_METHOD_LABEL = {
+  clause_anchored:  'Clause-Anchored',
+  keyword_match:    'Keyword Match',
+  sentence_jaccard: 'Semantic Match',
+}
 
 const STATUS_OPTIONS   = ['Pending', 'Approved', 'Rejected', 'In Progress', 'Completed']
 const PRIORITY_OPTIONS = ['Critical', 'High', 'Medium', 'Low']
@@ -89,6 +95,31 @@ function ExpandedRow({ m, circular, onOpenTraceability }) {
             </div>
           )}
 
+          {/* ── Clause Evidence (provenance_service output) ── */}
+          {m.evidence_quote && (
+            <div className="sm:col-span-2 lg:col-span-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Microscope size={11} className="text-violet-500 flex-shrink-0" />
+                <p className="font-mono text-[9px] uppercase tracking-wider text-[#8b98aa]">Clause Evidence</p>
+                {m.evidence_similarity != null && (
+                  <span className="ml-2 font-mono text-[9px] text-[#8b98aa]">
+                    {Math.round(m.evidence_similarity * 100)}% match confidence
+                  </span>
+                )}
+                {m.provenance_method && (
+                  <span className="ml-auto rounded border border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 font-mono text-[9px] text-violet-600 dark:text-violet-400">
+                    {PROVENANCE_METHOD_LABEL[m.provenance_method] || m.provenance_method}
+                  </span>
+                )}
+              </div>
+              <blockquote className="border-l-2 border-violet-300 dark:border-violet-700 pl-3">
+                <p className="text-[12px] leading-relaxed text-gray-600 dark:text-[#e8edf5]/70 italic line-clamp-3">
+                  "{m.evidence_quote}"
+                </p>
+              </blockquote>
+            </div>
+          )}
+
           <div className="sm:col-span-2 lg:col-span-3 border-t border-line/60 pt-3">
             <div className="flex flex-wrap items-center gap-4 text-[12px] text-[#8b98aa]">
               <div className="flex items-center gap-2">
@@ -129,13 +160,13 @@ function ExpandedRow({ m, circular, onOpenTraceability }) {
                 </div>
               )}
 
-              {m.reasoning && (
+              {(m.reasoning || m.evidence_quote) && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onOpenTraceability(m) }}
                   className="ml-auto flex items-center gap-1.5 rounded-md border border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-900/20 px-3 py-1 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors"
                 >
                   <Brain size={12} />
-                  <span className="font-mono text-[10px] font-semibold">Why was this generated?</span>
+                  <span className="font-mono text-[10px] font-semibold">Why was this extracted?</span>
                 </button>
               )}
             </div>

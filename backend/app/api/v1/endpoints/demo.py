@@ -19,6 +19,7 @@ from app.models.department import Department
 from app.services.event_service import log_event
 from app.services.ai_engine import reset_availability_cache
 from app.services.ollama_service import clear_cache as clear_prompt_cache
+from app.services.provenance_service import compute_provenance_for_circular
 
 router = APIRouter()
 
@@ -262,6 +263,13 @@ def _seed_demo_data(db: Session) -> dict:
     for e in all_events:
         db.add(e)
     db.commit()
+
+    # ── Clause provenance — compute evidence for all seeded MAPs ─────────────────
+    for circ in [circ1, circ2, circ3]:
+        try:
+            compute_provenance_for_circular(db, str(circ.id))
+        except Exception as exc:
+            pass  # non-fatal; provenance is best-effort on demo reset
 
     all_maps_count = len(maps1) + len(maps2) + len(maps3)
     return {
