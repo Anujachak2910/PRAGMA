@@ -18,7 +18,7 @@ export default function DashboardLayout() {
               PRAGMA Regulatory Compliance System · Canara Bank Demo
             </span>
             <span className="font-mono text-[10px] text-gray-400 dark:text-gray-600">
-              Suraksha Cyber Hackathon 2026 · Local AI Engine · FastAPI · SQLite
+              Air-Gapped · FastAPI · SQLite · v1.0
             </span>
           </div>
         </footer>

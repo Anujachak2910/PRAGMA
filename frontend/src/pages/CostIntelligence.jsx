@@ -27,17 +27,17 @@ const fmtDays = (n) => {
 }
 
 const PRIORITY_DOT = {
-  Critical: 'bg-red-500',
-  High:     'bg-orange-400',
-  Medium:   'bg-amber-400',
-  Low:      'bg-slate-400',
+  Critical: 'bg-danger',
+  High:     'bg-warning',
+  Medium:   'bg-brass',
+  Low:      'bg-[#8b98aa]',
 }
 
 const PRIORITY_TEXT = {
-  Critical: 'text-red-600 dark:text-red-400',
-  High:     'text-orange-600 dark:text-orange-400',
-  Medium:   'text-amber-600 dark:text-amber-400',
-  Low:      'text-slate-500 dark:text-slate-400',
+  Critical: 'text-danger-700 dark:text-red-400',
+  High:     'text-warning-700 dark:text-amber-400',
+  Medium:   'text-brass-deep dark:text-brass',
+  Low:      'text-[#8b98aa]',
 }
 
 const DEPT_COLORS = {
@@ -83,7 +83,7 @@ function SectionHeader({ icon: Icon, title, mono }) {
   return (
     <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3 flex-shrink-0">
       <Icon size={13} className="text-brass flex-shrink-0" />
-      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#8b98aa]">
+      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
         {title}
       </p>
       {mono && (
@@ -95,9 +95,9 @@ function SectionHeader({ icon: Icon, title, mono }) {
 
 function ROIBadge({ value }) {
   if (!value) return null
-  const cls = value >= 3 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/60'
-    : value >= 1.5        ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/60'
-    :                       'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/60'
+  const cls = value >= 3 ? 'text-success-700 dark:text-green-400 bg-success-50 dark:bg-green-900/20 border-success-200 dark:border-green-800/60'
+    : value >= 1.5        ? 'text-warning-700 dark:text-amber-400 bg-warning-50 dark:bg-amber-900/20 border-warning-200 dark:border-amber-800/60'
+    :                       'text-danger-700 dark:text-red-400 bg-danger-50 dark:bg-red-900/20 border-danger-200 dark:border-red-800/60'
   return (
     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${cls}`}>
       {value}× ROI

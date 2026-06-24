@@ -155,43 +155,48 @@ function DeptRiskHeatmap({ maps }) {
   if (!data.length) return null
 
   return (
-    <div className="rounded-xl border border-line bg-white dark:bg-card p-5">
-      <p className="mb-4 font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
-        Department Risk Heatmap
-      </p>
-      <div className="space-y-2.5">
-        {data.map((d) => {
-          const riskLevel = d.avgRisk >= 76 ? 'danger' : d.avgRisk >= 51 ? 'warning' : d.avgRisk >= 26 ? 'brass' : 'success'
-          const barCls = { danger: 'bg-danger', warning: 'bg-warning', brass: 'bg-brass', success: 'bg-success' }[riskLevel]
-          return (
-            <div key={d.dept}>
-              <div className="mb-1 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] font-semibold text-ink dark:text-[#e8edf5]">{d.dept}</span>
-                  <span className="font-mono text-[10px] text-[#8b98aa]">{d.total} MAPs</span>
-                  {d.critical > 0 && (
-                    <span className="rounded bg-danger-50 dark:bg-red-900/30 px-1 py-0.5 font-mono text-[9px] font-bold text-danger dark:text-red-400">
-                      {d.critical} critical
-                    </span>
-                  )}
-                </div>
-                <span className="font-mono text-[10px] tabular-nums text-[#8b98aa]">
-                  Risk {d.avgRisk}
-                </span>
-              </div>
-              <div className="h-2 rounded-full bg-line dark:bg-surface overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${barCls}`}
-                  style={{ width: `${Math.max(d.avgRisk, 4)}%` }}
-                />
-              </div>
-            </div>
-          )
-        })}
+    <div className="rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3">
+        <TrendingUp size={13} className="text-[#8b98aa] flex-shrink-0" />
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
+          Department Risk Heatmap
+        </p>
       </div>
-      <p className="mt-3 font-mono text-[10px] text-[#8b98aa]">
-        Bar = avg. risk score across all MAPs in department
-      </p>
+      <div className="p-5">
+        <div className="space-y-2.5">
+          {data.map((d) => {
+            const riskLevel = d.avgRisk >= 76 ? 'danger' : d.avgRisk >= 51 ? 'warning' : d.avgRisk >= 26 ? 'brass' : 'success'
+            const barCls = { danger: 'bg-danger', warning: 'bg-warning', brass: 'bg-brass', success: 'bg-success' }[riskLevel]
+            return (
+              <div key={d.dept}>
+                <div className="mb-1 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] font-semibold text-ink dark:text-[#e8edf5]">{d.dept}</span>
+                    <span className="font-mono text-[10px] text-[#8b98aa]">{d.total} MAPs</span>
+                    {d.critical > 0 && (
+                      <span className="rounded bg-danger-50 dark:bg-red-900/30 px-1 py-0.5 font-mono text-[9px] font-bold text-danger dark:text-red-400">
+                        {d.critical} critical
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono text-[10px] tabular-nums text-[#8b98aa]">
+                    Risk {d.avgRisk}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-line dark:bg-surface overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${barCls}`}
+                    style={{ width: `${Math.max(d.avgRisk, 4)}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <p className="mt-3 font-mono text-[10px] text-[#8b98aa]">
+          Bar = avg. risk score across all MAPs in department
+        </p>
+      </div>
     </div>
   )
 }
@@ -219,11 +224,6 @@ function ComplianceInvestmentWidget() {
 
   const { summary, department_breakdown } = data
   const maxCost = Math.max(...(department_breakdown || []).map((d) => d.total_cost), 1)
-
-  const DEPT_COLORS = {
-    IT: '#2B4A8F', Compliance: '#c69b4f', Risk: '#7C3AED',
-    Legal: '#0891B2', Treasury: '#065F46',
-  }
 
   return (
     <div className="rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
@@ -430,10 +430,14 @@ export default function Dashboard() {
           <DepartmentWorkload maps={maps} />
         </div>
 
-        <div className="lg:col-span-2 rounded-xl border border-line bg-white dark:bg-card p-5">
-          <p className="mb-4 font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
-            Status Distribution
-          </p>
+        <div className="lg:col-span-2 rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3">
+            <Layers size={13} className="text-[#8b98aa] flex-shrink-0" />
+            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
+              Status Distribution
+            </p>
+          </div>
+          <div className="p-5">
           {statusData.length === 0 ? (
             <div className="flex h-44 flex-col items-center justify-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-line bg-paper dark:bg-surface">
@@ -485,6 +489,7 @@ export default function Dashboard() {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
 

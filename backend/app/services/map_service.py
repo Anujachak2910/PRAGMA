@@ -83,14 +83,6 @@ def create_maps_from_extraction(db: Session, circular_id: uuid.UUID, raw_maps: l
         except Exception as exc:
             logger.warning("Provenance computation failed (non-fatal): %s", exc)
 
-    # Log maps_extracted event
-    log_event(
-        db=db,
-        event_type="maps_extracted",
-        description=f"{len(created_maps)} MAPs extracted and routed successfully",
-        circular_id=circular_id
-    )
-
     return created_maps
 
 

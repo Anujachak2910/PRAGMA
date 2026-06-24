@@ -57,7 +57,7 @@ app = FastAPI(
     title="PRAGMA API",
     description=(
         "Proactive Regulatory Autonomous Governance & Management Agent — "
-        "Air-Gapped Compliance Intelligence · SuRaksha Cyber Hackathon 2.0"
+        "Air-Gapped Compliance Intelligence Platform for Canara Bank"
     ),
     version="1.0.0",
     docs_url="/docs",

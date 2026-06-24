@@ -75,7 +75,7 @@ export default function EventLog() {
   return (
     <div className="space-y-4">
       {usingMock && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+        <div className="rounded-md border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 text-sm text-amber-800 dark:text-amber-300">
           Backend not reachable — showing sample audit data.
         </div>
       )}
@@ -145,13 +145,13 @@ export default function EventLog() {
         {hasFilters && (
           <button
             onClick={clearAll}
-            className="flex items-center gap-1 rounded-lg border border-line bg-white dark:bg-card px-2.5 py-1 text-[11px] text-gray-500 hover:bg-gray-50"
+            className="flex items-center gap-1 rounded-lg border border-line bg-white dark:bg-card px-2.5 py-1 text-[11px] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-surface"
           >
             <X size={11} /> Clear
           </button>
         )}
 
-        <span className="ml-auto font-mono text-[11px] text-gray-400">
+        <span className="ml-auto font-mono text-[11px] text-gray-400 dark:text-gray-500">
           {filtered.length} of {events.length} event{events.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -160,7 +160,7 @@ export default function EventLog() {
       <div className="overflow-hidden rounded-xl border border-line bg-white dark:bg-card">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-line bg-paper/60">
+            <thead className="border-b border-line bg-paper/60 dark:bg-surface/40">
               <tr>
                 <th className="px-5 py-3 font-mono text-[10px] uppercase tracking-wider text-gray-500 w-4">
                   &nbsp;

@@ -128,10 +128,10 @@ export default function Sidebar() {
       <div className="px-7 pb-6 pt-2">
         <div className="h-px w-full bg-white/10" />
         <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.18em] text-slate-600">
-          Suraksha Cyber Hackathon 2026
+          Canara Bank Internal Use
         </p>
         <p className="mt-1 font-mono text-[9px] text-slate-700">
-          Local AI Engine · FastAPI · SQLite
+          Air-Gapped · v1.0 · Offline Ready
         </p>
       </div>
     </aside>
