@@ -1,20 +1,9 @@
 """
 PRAGMA — Regulatory Feed Ingestion Service
 
-Owner: Anuja (Data & Integration Lead)
-Branch: feature/data-pipeline
-Milestone: M4 (demo-enhancing, non-blocking)
-
 Fetches and parses RSS/Atom feeds from RBI, SEBI, and MCA.
 Converts feed entries into CircularPreview objects for display
-in the frontend's "Feed Monitor" panel (future feature).
-
-This service is NOT called during the hackathon demo flow.
-The demo uses manually pasted circular text.
-This is included for:
-  - Presentation slides showing the full vision
-  - Future production integration
-  - Demonstrating proactive regulatory monitoring capability
+in the frontend's "Feed Monitor" panel.
 
 Usage:
     from app.services.feed_service import fetch_all_feeds, CircularPreview

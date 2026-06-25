@@ -6,17 +6,14 @@ python-multipart==0.0.9         # Required for form/file uploads
 # ─── Database ─────────────────────────────────────────────────────────────────
 sqlalchemy==2.0.36              # 2.0.36+ required for Python 3.13 compatibility
 alembic==1.13.1
-psycopg2-binary==2.9.12         # PostgreSQL driver (binary = no build deps) — 2.9.12 has Python 3.13 wheels
 
 # ─── Validation & Settings ────────────────────────────────────────────────────
 pydantic==2.10.6
 pydantic-settings==2.7.1        # .env loading via BaseSettings
 
-# ─── AI ───────────────────────────────────────────────────────────────────────
-anthropic==0.28.0               # Claude API SDK
-
-# ─── HTTP Client ──────────────────────────────────────────────────────────────
-httpx==0.27.0                   # Used internally by anthropic SDK
+# ─── AI / LLM ─────────────────────────────────────────────────────────────────
+httpx==0.27.0                   # HTTP client for Ollama API calls
+anthropic==0.28.0               # Legacy SDK — app runs fully offline without an API key
 
 # ─── Utilities ────────────────────────────────────────────────────────────────
 python-dotenv==1.0.1

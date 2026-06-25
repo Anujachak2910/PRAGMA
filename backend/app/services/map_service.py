@@ -1,11 +1,8 @@
 """
 PRAGMA — MAP Service
 
-Owner: Diyasha (Backend APIs)
-Milestone: M2
-
 Responsibilities:
-  - Persist MAPs extracted by claude_service into the database
+  - Persist extracted MAPs into the database
   - Look up department by name and attach to each MAP
   - Update MAP status with validation
   - Query MAPs with filters

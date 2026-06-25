@@ -1,122 +1,108 @@
 # PRAGMA
 ### Proactive Regulatory Autonomous Governance & Management Agent
 
-> **SuRaksha Cyber Hackathon 2.0 — Canara Bank**
-> Theme: Agentic Regulatory Intelligence & Compliance
+An air-gapped compliance intelligence platform that transforms RBI, SEBI, and MCA regulatory circulars into structured, tracked, and auditable action plans — with zero external API dependencies.
 
 ---
 
-## Problem Statement
+## Problem
 
-Banks manually process RBI, SEBI, and MCA regulatory circulars.
-
-The current process:
-- Read dense regulations manually
-- Identify required actions
-- Determine responsible departments
-- Route tasks through emails
-- Track completion manually
-- Prepare evidence during audits
-
-This process is **slow, fragmented, and error-prone.** Compliance gaps emerge not from negligence but from the absence of a structured, automated workflow.
+Banks process regulatory circulars manually: reading dense documents, identifying required actions, routing tasks through email, and assembling evidence at audit time. This process is slow, fragmented, and error-prone. Compliance gaps emerge not from negligence but from the absence of a structured, automated workflow.
 
 ---
 
 ## What PRAGMA Does
 
-PRAGMA transforms regulatory circulars into **Measurable Action Points (MAPs)**, routes them to the correct departments, tracks their progress, and maintains a full lifecycle event log — all with a compliance officer in the loop.
+PRAGMA ingests a regulatory circular and outputs **Measurable Action Points (MAPs)** — department-specific, trackable obligations with full lifecycle traceability from extraction to evidence.
 
-### Core Differentiator
+```mermaid
+flowchart TD
+    A[Compliance Officer\nUploads Circular] --> B[PRAGMA Backend\nFastAPI + SQLite]
+    B --> C{LLM Available?}
+    C -->|Ollama qwen3:8b| D[AI Extraction\nStructured MAPs]
+    C -->|Offline fallback| E[Rule-Based Extractor\nRegex + Heuristics]
+    D --> F[MAP Review\nCompliance Officer]
+    E --> F
+    F --> G[Approved MAPs\nRouted to Departments]
+    G --> H[IT · Risk · Legal\nCompliance · Treasury]
+    H --> I[Completion + Evidence\nFull Audit Trail]
+    I --> J[Regulatory Submission\nEvent Log Export]
+```
 
-Most teams build dashboards, chatbots, and summarizers.
-
-PRAGMA goes further:
-
-| Step | What PRAGMA Does |
-|------|-----------------|
-| 1 | Ingests a regulatory circular |
-| 2 | Claude AI extracts Measurable Action Points (MAPs) |
-| 3 | MAPs auto-routed to responsible departments |
-| 4 | Compliance officer reviews and approves each MAP |
-| 5 | Department marks completion |
-| 6 | Full audit trail maintained in the event log |
+| Step | What Happens |
+|------|-------------|
+| 1 | Compliance officer uploads circular via web UI |
+| 2 | PRAGMA extracts Measurable Action Points (MAPs) — AI-assisted or rule-based |
+| 3 | Officer reviews, edits, and approves each MAP |
+| 4 | MAPs auto-routed to responsible departments |
+| 5 | Departments mark tasks complete with evidence |
+| 6 | Full audit trail maintained in tamper-evident event log |
 
 > **Humans supervise. The system orchestrates.**
 
 ---
 
+## Architecture
+
+PRAGMA is designed for **air-gapped deployment**: no internet access, no external API keys, no cloud dependencies. Everything runs on-premises.
+
+```
+Circular Upload
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│  PRAGMA Backend  (FastAPI · Python 3.11)            │
+│                                                     │
+│  ┌─────────────┐   ┌─────────────────────────────┐ │
+│  │ AI Engine   │   │ Rule-Based Extractor        │ │
+│  │ Ollama      │   │ Regex + Obligation Patterns │ │
+│  │ qwen3:8b /  │   │ Zero external dependencies  │ │
+│  │ phi3.5      │   │                             │ │
+│  └──────┬──────┘   └────────────┬────────────────┘ │
+│         │  primary              │  fallback         │
+│         └──────────┬────────────┘                  │
+│                    ▼                                │
+│          MAP Extraction + Routing                   │
+│                    │                                │
+│                    ▼                                │
+│  ┌──────────────────────────────────────────────┐  │
+│  │  SQLite (WAL mode)                           │  │
+│  │  circulars · maps · events · departments     │  │
+│  └──────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│  PRAGMA Frontend  (React 18 · Tailwind · Recharts)  │
+│  Dashboard · MAP Register · Approvals · Audit Log   │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Tailwind CSS, Recharts |
-| Backend | FastAPI, Python 3.11+ |
-| Database | PostgreSQL 15 |
-| AI | Claude Sonnet (Anthropic API) |
-| ORM / Migrations | SQLAlchemy 2.0 + Alembic |
+| Layer | Technology | Notes |
+|-------|-----------|-------|
+| Frontend | React 18, Tailwind CSS, Recharts | Vite build, lazy-loaded pages |
+| Backend | FastAPI, Python 3.11+ | Async, BackgroundTasks for LLM |
+| Database | SQLite (WAL journal) | Auto-created on startup, no setup required |
+| AI (optional) | Ollama — qwen3:8b / phi3.5 | Falls back to rule-based extractor if unavailable |
+| ORM | SQLAlchemy 2.0 | No Alembic migrations needed — tables auto-created |
+| Extraction fallback | Regex + obligation heuristics | Fully offline, zero latency |
 
 ---
 
-## Team
+## Key Features
 
-| Name | Role | Ownership |
-|------|------|-----------|
-| Anoushka | AI Lead | LLM pipeline, MAP extraction, Claude orchestration |
-| Anuja | Prompt Engineer | Prompt design, test datasets, MAP quality validation |
-| Diyasha | Backend Engineer | FastAPI routes, event logging, approval workflow |
-| Diptanshu | Data Architect | PostgreSQL schema, SQLAlchemy models, migrations |
-| Ashwin | Frontend Engineer | React dashboard, UI/UX, frontend integration |
-
----
-
-## Repository Structure
-
-```
-PRAGMA/
-├── backend/                        # FastAPI application
-│   ├── app/
-│   │   ├── api/
-│   │   │   └── v1/
-│   │   │       ├── router.py       # Aggregates all endpoint routers
-│   │   │       └── endpoints/      # One file per resource
-│   │   ├── models/                 # SQLAlchemy ORM models
-│   │   ├── schemas/                # Pydantic request/response schemas
-│   │   ├── services/               # Business logic layer
-│   │   │   ├── claude_service.py   # Claude API + MAP extraction
-│   │   │   ├── map_service.py      # MAP creation and routing
-│   │   │   └── event_service.py    # Audit event logging
-│   │   ├── utils/                  # Shared helpers
-│   │   ├── config.py               # App settings via pydantic-settings
-│   │   ├── database.py             # SQLAlchemy engine + session
-│   │   └── main.py                 # FastAPI app factory
-│   ├── alembic/                    # Database migrations
-│   ├── tests/                      # Backend test suite
-│   ├── requirements.txt
-│   ├── alembic.ini
-│   └── .env.example
-│
-├── frontend/                       # React application
-│   └── src/
-│       ├── api/                    # Backend API call functions
-│       ├── components/             # Reusable UI components
-│       ├── contexts/               # React global state
-│       ├── hooks/                  # Custom React hooks
-│       ├── layouts/                # Page layout wrappers
-│       ├── pages/                  # Route-level page components
-│       ├── services/               # Axios instance
-│       └── utils/                  # Constants, formatters
-│
-├── docs/                           # Architecture, API reference, demo script
-│   ├── architecture.md
-│   ├── api-reference.md
-│   ├── database-schema.md
-│   ├── demo-script.md
-│   ├── github-issues.md
-│   ├── branching-strategy.md
-│   └── team-ownership.md
-│
-└── presentation/                   # Hackathon slides
-```
+- **Air-gapped operation** — works fully offline; Ollama is optional
+- **Graceful degradation** — qwen3:8b → phi3.5 → rule-based extractor → mock data
+- **Traceability** — every MAP links back to the exact clause in the source circular
+- **Approval workflow** — compliance officers review and approve before routing
+- **Audit trail** — tamper-evident event log for every status change
+- **Cost intelligence** — tracks compliance spend by department and regulation
+- **Provenance scoring** — Jaccard + clause-anchored similarity for MAP-to-regulation mapping
+- **Demo reset** — seeds 3 circulars + 14 MAPs + audit trail in one API call
 
 ---
 
@@ -126,8 +112,7 @@ PRAGMA/
 
 - Python 3.11+
 - Node.js 18+
-- PostgreSQL 15+
-- Anthropic API key ([console.anthropic.com](https://console.anthropic.com))
+- [Ollama](https://ollama.ai) *(optional — system works without it)*
 
 ### 1. Clone the repository
 
@@ -152,19 +137,15 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
+# Configure environment (SQLite, no external keys required)
 cp .env.example .env
-# Open .env and set DATABASE_URL and ANTHROPIC_API_KEY
 
-# Run database migrations
-alembic upgrade head
-
-# Start development server
+# Start server — SQLite database is created automatically
 python run.py
 ```
 
-Backend runs at: `http://localhost:8000`
-Swagger docs: `http://localhost:8000/docs`
+Backend runs at: `http://localhost:8000`  
+API docs: `http://localhost:8000/docs`
 
 ### 3. Frontend setup
 
@@ -174,37 +155,86 @@ cd frontend
 # Install dependencies
 npm install
 
-# Configure environment
-cp .env.example .env
-
 # Start development server
 npm run dev
 ```
 
-Frontend runs at: `http://localhost:3000`
+Frontend runs at: `http://localhost:5173`
 
-### 4. Database
+### 4. Optional: Enable AI extraction with Ollama
 
 ```bash
-# Create the PostgreSQL database
-createdb pragma_db
+# Install Ollama from https://ollama.ai, then pull the model
+ollama pull qwen3:8b
 
-# Or with psql
-psql -U postgres -c "CREATE DATABASE pragma_db;"
+# Start Ollama (runs as a local service)
+ollama serve
+```
+
+PRAGMA will automatically detect Ollama on startup. If unavailable, extraction falls back to the built-in rule-based engine — no configuration change needed.
+
+### 5. Load demo data
+
+```bash
+# Seeds 3 regulatory circulars + 14 MAPs + full audit trail
+curl -X POST http://localhost:8000/api/v1/demo/reset
 ```
 
 ---
 
-## Development Workflow
+## Repository Structure
 
-See [docs/branching-strategy.md](docs/branching-strategy.md) for the full Git workflow.
+```
+PRAGMA/
+├── backend/                        # FastAPI application
+│   ├── app/
+│   │   ├── api/v1/
+│   │   │   ├── router.py           # Route aggregator
+│   │   │   └── endpoints/          # circulars, maps, events, demo, insights
+│   │   ├── models/                 # SQLAlchemy ORM models
+│   │   ├── schemas/                # Pydantic request/response schemas
+│   │   ├── services/
+│   │   │   ├── ai_engine.py        # Ollama integration + fallback chain
+│   │   │   ├── map_service.py      # MAP creation and routing
+│   │   │   ├── provenance_service.py # Clause-anchored MAP traceability
+│   │   │   ├── cost_service.py     # Compliance cost tracking
+│   │   │   └── event_service.py    # Audit event logging
+│   │   ├── utils/
+│   │   │   └── rule_extractor.py   # Offline regex-based MAP extraction
+│   │   ├── config.py               # App settings via pydantic-settings
+│   │   ├── database.py             # SQLAlchemy engine + auto-create tables
+│   │   └── main.py                 # FastAPI app factory
+│   ├── tests/                      # Backend test suite
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── frontend/                       # React application
+│   └── src/
+│       ├── api/                    # Backend API call functions
+│       ├── components/             # Reusable UI components
+│       ├── contexts/               # React global state
+│       ├── hooks/                  # Custom React hooks (with caching)
+│       ├── pages/                  # Route-level page components
+│       └── utils/                  # Constants, formatters
+│
+└── docs/                           # Architecture and API reference
+    ├── architecture.md
+    ├── api-reference.md
+    ├── database-schema.md
+    └── demo-script.md
+```
 
-**Quick reference:**
-1. Branch from `develop`: `git checkout -b feature/your-feature develop`
-2. Build and test your feature
-3. Open a PR to `develop`
-4. One team member reviews and merges
-5. Before demo: merge `develop` → `main`
+---
+
+## Team
+
+| Name | Contribution |
+|------|-------------|
+| Anoushka Nag | Architecture, air-gapped migration, cost intelligence, provenance, enterprise hardening |
+| Ashwin Yadav | Frontend scaffold, backend integration, design system |
+| Anuja Chakraborty | Data pipeline, test suite, SQLAlchemy compatibility |
+| Diyasha Nag | Backend APIs, approval workflow |
+| Diptanshu Vishwa | Database layer |
 
 ---
 
@@ -214,11 +244,5 @@ See [docs/branching-strategy.md](docs/branching-strategy.md) for the full Git wo
 |----------|-------------|
 | [Architecture](docs/architecture.md) | System design and component overview |
 | [API Reference](docs/api-reference.md) | All backend endpoints |
-| [Database Schema](docs/database-schema.md) | PostgreSQL tables and relationships |
+| [Database Schema](docs/database-schema.md) | SQLite tables and relationships |
 | [Demo Script](docs/demo-script.md) | 4-minute demo runbook |
-| [GitHub Issues](docs/github-issues.md) | Full sprint backlog |
-| [Team Ownership](docs/team-ownership.md) | Who owns what |
-
----
-
-*SuRaksha Cyber Hackathon 2.0 — Internal prototype. Not for production use.*

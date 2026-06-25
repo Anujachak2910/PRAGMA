@@ -1,6 +1,5 @@
 # PRAGMA — 4-Minute Demo Script
 
-This is the exact sequence to follow during the live hackathon demo.
 Run `POST /demo/reset` before every demo run to ensure clean state.
 
 ---
@@ -8,10 +7,10 @@ Run `POST /demo/reset` before every demo run to ensure clean state.
 ## Pre-Demo Checklist (5 minutes before)
 
 - [ ] Backend running at `localhost:8000`
-- [ ] Frontend running at `localhost:3000`
-- [ ] PostgreSQL running, `pragma_db` accessible
+- [ ] Frontend running at `localhost:5173`
+- [ ] SQLite database auto-created (no setup required)
 - [ ] `POST /demo/reset` executed — clean state confirmed
-- [ ] Anthropic API key valid
+- [ ] Ollama running (optional — fallback extractor works without it)
 - [ ] Browser tab open at the Dashboard
 - [ ] Sample RBI circular text ready to paste
 

@@ -1,9 +1,8 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, CheckSquare, ScrollText,
-  Upload, Shield, Layers, PlayCircle,
+  Upload, Shield, Layers,
 } from 'lucide-react'
-import { useAppContext } from '../../contexts/AppContext'
 
 const NAV_ITEMS = [
   { to: '/',        label: 'Dashboard',     sub: 'Overview',      icon: LayoutDashboard, end: true },
@@ -14,21 +13,7 @@ const NAV_ITEMS = [
   { to: '/upload',  label: 'New Circular',  sub: 'Intake',        icon: Upload },
 ]
 
-const DEMO_SCENARIOS = [
-  { id: 'rbi-cyber',       label: 'RBI Cybersecurity 2026',     sub: '8 MAPs · IT, Risk, Compliance' },
-  { id: 'sebi-cscrf',      label: 'SEBI CSCRF Framework',       sub: '6 MAPs · Legal, Treasury' },
-  { id: 'digital-lending', label: 'RBI Digital Lending Norms',  sub: 'Demo scenario' },
-]
-
 export default function Sidebar() {
-  const { demoScenario, setDemoScenario } = useAppContext()
-  const navigate = useNavigate()
-
-  const handleScenario = (id) => {
-    setDemoScenario(id)
-    navigate('/')
-  }
-
   return (
     <aside className="flex w-64 flex-col bg-ink dark:bg-[#040C14] text-slate-300 flex-shrink-0">
       {/* Masthead */}
@@ -89,43 +74,14 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Demo Scenarios */}
-      <div className="px-4 pb-4">
-        <div className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-3">
-          <div className="mb-2 flex items-center gap-1.5">
-            <PlayCircle size={11} className="text-brass flex-shrink-0" />
-            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass">
-              Demo Scenarios
-            </p>
-          </div>
-          <div className="space-y-1">
-            {DEMO_SCENARIOS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => handleScenario(s.id)}
-                className={[
-                  'w-full rounded-md px-2.5 py-1.5 text-left transition-colors',
-                  demoScenario === s.id
-                    ? 'bg-brass/20 text-brass'
-                    : 'text-slate-500 hover:bg-white/[0.05] hover:text-slate-300',
-                ].join(' ')}
-              >
-                <p className="truncate text-[11px] font-medium leading-none">{s.label}</p>
-                <p className="mt-0.5 truncate font-mono text-[9px] text-slate-600">{s.sub}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Footer */}
       <div className="px-7 pb-6 pt-2">
         <div className="h-px w-full bg-white/10" />
         <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.18em] text-slate-600">
-          Suraksha Cyber Hackathon 2026
+          Canara Bank Internal Use
         </p>
         <p className="mt-1 font-mono text-[9px] text-slate-700">
-          Powered by Claude · FastAPI · PostgreSQL
+          Air-Gapped · v1.0
         </p>
       </div>
     </aside>

@@ -51,9 +51,9 @@ app = FastAPI(
     title="PRAGMA API",
     description=(
         "Proactive Regulatory Autonomous Governance & Management Agent — "
-        "SuRaksha Cyber Hackathon 2.0"
+        "Air-Gapped Compliance Intelligence Platform for Canara Bank"
     ),
-    version="0.1.0",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
@@ -65,7 +65,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -116,7 +116,7 @@ export default function TopBar() {
         <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-violet-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Claude AI {online ? 'Active' : 'Standby'}
+            PRAGMA AI {online ? 'Active' : 'Standby'}
           </span>
         </div>
         <div className="flex items-center gap-1.5">

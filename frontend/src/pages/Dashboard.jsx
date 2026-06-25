@@ -144,8 +144,9 @@ function DeptRiskHeatmap({ maps }) {
       const dMaps   = maps.filter((m) => m.department === dept)
       const pending  = dMaps.filter((m) => sk(m.status) === 'PENDING').length
       const critical = dMaps.filter((m) => (m.priority || '').toLowerCase() === 'critical').length
+      const PRIORITY_RISK = { Critical: 90, High: 65, Medium: 35, Low: 15 }
       const avgRisk  = dMaps.length
-        ? Math.round(dMaps.reduce((s, m) => s + (m.risk?.score ?? 0), 0) / dMaps.length)
+        ? Math.round(dMaps.reduce((s, m) => s + (PRIORITY_RISK[m.priority] ?? 35), 0) / dMaps.length)
         : 0
       return { dept, total: dMaps.length, pending, critical, avgRisk }
     }).filter((d) => d.total > 0)

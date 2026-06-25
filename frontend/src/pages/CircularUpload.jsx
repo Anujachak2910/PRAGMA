@@ -58,7 +58,7 @@ const FILE_CFG = {
 
 const STAGES = [
   { id: 'upload',  Icon: Upload,       label: 'Sending to PRAGMA server',   sub: 'Establishing secure connection…'      },
-  { id: 'extract', Icon: Bot,          label: 'Claude AI reading circular',  sub: 'Extracting measurable action points…' },
+  { id: 'extract', Icon: Bot,          label: 'PRAGMA AI reading circular',  sub: 'Extracting measurable action points…' },
   { id: 'route',   Icon: ArrowRight,   label: 'Routing MAPs to departments', sub: 'Matching actions to responsible teams…' },
   { id: 'done',    Icon: CheckCircle2, label: 'Extraction complete',         sub: 'MAPs added to the register.'          },
 ]
@@ -589,7 +589,7 @@ export default function CircularUpload() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-ink px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-800 dark:bg-primary-800 dark:hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Sparkles size={15} />
-              Extract MAPs with Claude AI
+              Extract MAPs with PRAGMA AI
             </button>
           ) : !extractedResult ? (
             <div className="rounded-xl border border-line bg-white dark:bg-card p-5">
@@ -716,7 +716,7 @@ export default function CircularUpload() {
             <ol className="space-y-3">
               {[
                 'Upload a PDF or DOCX, paste text, or link to a public circular URL.',
-                'Claude AI reads the document and extracts Measurable Action Points with clause references.',
+                'PRAGMA AI reads the document and extracts Measurable Action Points with clause references.',
                 'Each MAP is assigned a priority, department, deadline, and AI confidence score.',
                 'MAPs enter the compliance review queue for officer approval.',
               ].map((step, i) => (
@@ -774,11 +774,11 @@ export default function CircularUpload() {
               <Sparkles size={13} className="mt-0.5 flex-shrink-0 text-violet-500" />
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-wide text-violet-700">
-                  Claude AI engine
+                  PRAGMA AI Engine
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed text-violet-600 dark:text-violet-400">
-                  PRAGMA uses claude-sonnet-4-6 to parse regulatory language, identify
-                  compliance obligations, and estimate implementation timelines.
+                  PRAGMA uses a local LLM (Ollama) to parse regulatory language, identify
+                  compliance obligations, and estimate implementation timelines — fully offline.
                 </p>
               </div>
             </div>

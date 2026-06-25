@@ -1,9 +1,6 @@
 """
 PRAGMA — Circulars Endpoints
 
-Owner: Diyasha (Backend APIs) + Anoushka (LLM pipeline)
-Milestone: M2
-
 Endpoints:
   POST /circulars/upload   — Upload circular text, trigger MAP extraction
   GET  /circulars          — List all circulars with status
