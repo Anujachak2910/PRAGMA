@@ -22,8 +22,15 @@ logger = logging.getLogger(__name__)
 
 def create_maps_from_extraction(db: Session, circular_id: uuid.UUID, raw_maps: list[dict]) -> list[MAP]:
     """
-    Receive Claude MAP output, resolve departments, create and persist MAP records, and return them.
+    Receive extracted MAP dicts, resolve departments, persist MAP records, compute clause provenance.
     """
+    from app.models.circular import Circular
+    from app.services.provenance_service import compute_provenance_for_map
+
+    # Fetch circular content once for provenance computation
+    circular = db.query(Circular).filter(Circular.id == str(circular_id)).first()
+    circular_content = circular.content if circular else ""
+
     created_maps = []
     for raw_map in raw_maps:
         # Resolve department
@@ -64,13 +71,14 @@ def create_maps_from_extraction(db: Session, circular_id: uuid.UUID, raw_maps: l
     for m in created_maps:
         db.refresh(m)
 
-    # Log maps_extracted event
-    log_event(
-        db=db,
-        event_type="maps_extracted",
-        description=f"{len(created_maps)} MAPs extracted and routed successfully",
-        circular_id=circular_id
-    )
+    # ── Clause provenance — compute evidence for each MAP ─────────────────────
+    if circular_content:
+        try:
+            for m in created_maps:
+                compute_provenance_for_map(db, m, circular_content)
+            db.commit()
+        except Exception as exc:
+            logger.warning("Provenance computation failed (non-fatal): %s", exc)
 
     return created_maps
 

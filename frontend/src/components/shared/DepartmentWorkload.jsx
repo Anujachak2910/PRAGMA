@@ -1,3 +1,5 @@
+import { Building2 } from 'lucide-react'
+
 const key = (s) => (s || '').toString().trim().toUpperCase().replace(/\s+/g, '_')
 const prio = (p) => (p || '').toString().trim().toLowerCase()
 const RESOLVED = ['APPROVED', 'IN_PROGRESS', 'COMPLETED']
@@ -15,9 +17,14 @@ export default function DepartmentWorkload({ maps }) {
   const maxLoad = Math.max(1, ...rows.map((r) => r.load))
 
   return (
-    <section className="rounded-xl border border-line bg-white dark:bg-card p-5">
-      <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">Department Workload</p>
-      <div className="space-y-3">
+    <section className="rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3">
+        <Building2 size={13} className="text-[#8b98aa] flex-shrink-0" />
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
+          Department Workload
+        </p>
+      </div>
+      <div className="p-5 space-y-3">
         {rows.map((r) => (
           <div key={r.dept} className="flex items-center gap-4">
             <span className="w-24 flex-shrink-0 text-sm font-medium text-ink dark:text-[#e8edf5]">{r.dept}</span>

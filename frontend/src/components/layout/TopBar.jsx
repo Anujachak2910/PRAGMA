@@ -1,22 +1,55 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useBackendStatus } from '../../hooks/useBackendStatus'
-import { User, Building2, Activity } from 'lucide-react'
+import { User, Building2, Activity, Cpu, Shield } from 'lucide-react'
 import ThemeToggle from '../shared/ThemeToggle'
 
 const PAGES = {
-  '/':         { title: 'Command Dashboard',       ref: 'OVERVIEW' },
-  '/maps':     { title: 'Action Point Register',   ref: 'REGISTER' },
-  '/review':   { title: 'AI Extraction Review',    ref: 'REVIEW' },
-  '/approvals':{ title: 'Compliance Review Queue', ref: 'QUEUE' },
-  '/events':   { title: 'Audit Event Ledger',      ref: 'LEDGER' },
-  '/upload':   { title: 'Circular Ingestion',      ref: 'INTAKE' },
+  '/':          { title: 'Command Dashboard',              ref: 'OVERVIEW'     },
+  '/maps':      { title: 'Action Point Register',          ref: 'REGISTER'     },
+  '/review':    { title: 'AI Extraction Review',           ref: 'REVIEW'       },
+  '/approvals': { title: 'Compliance Review Queue',        ref: 'QUEUE'        },
+  '/events':    { title: 'Audit Event Ledger',             ref: 'LEDGER'       },
+  '/upload':    { title: 'Circular Ingestion',             ref: 'INTAKE'       },
+  '/simulate':  { title: 'Compliance Impact Simulator',    ref: 'SIMULATE'     },
+  '/trace':     { title: 'Compliance Traceability',        ref: 'TRACEABILITY' },
+  '/diff':      { title: 'Regulatory Change Diff Engine',  ref: 'DIFF'         },
+  '/conflicts': { title: 'Cross-Regulator Conflict Matrix',ref: 'CONFLICTS'    },
+  '/cost':      { title: 'Compliance Cost Intelligence',   ref: 'COST-INTEL'   },
+}
+
+const STATUS_CFG = {
+  healthy: {
+    pill:  'border-success-200 dark:border-green-800 bg-success-50 dark:bg-green-900/30',
+    dot:   'bg-success animate-pulse',
+    text:  'text-success-700 dark:text-green-400',
+    label: 'System Online',
+  },
+  degraded: {
+    pill:  'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30',
+    dot:   'bg-warning animate-pulse',
+    text:  'text-warning-700 dark:text-amber-400',
+    label: 'Degraded',
+  },
+  offline: {
+    pill:  'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20',
+    dot:   'bg-gray-300 dark:bg-gray-600',
+    text:  'text-red-600 dark:text-red-400',
+    label: 'Backend Offline',
+  },
+}
+
+const CONNECTING_CFG = {
+  pill:  'border-line bg-white dark:bg-surface',
+  dot:   'bg-gray-300 dark:bg-gray-600 animate-pulse',
+  text:  'text-gray-500 dark:text-gray-400',
+  label: 'Connecting…',
 }
 
 export default function TopBar() {
-  const { pathname } = useLocation()
-  const page = PAGES[pathname] || { title: 'PRAGMA', ref: '—' }
-  const { online, checked } = useBackendStatus()
+  const { pathname }                      = useLocation()
+  const page                              = PAGES[pathname] || { title: 'PRAGMA', ref: '—' }
+  const { status, aiLabel, online, checked } = useBackendStatus()
 
   const [tick, setTick] = useState(() => new Date())
   useEffect(() => {
@@ -27,6 +60,11 @@ export default function TopBar() {
   const timeStr = tick.toLocaleTimeString('en-IN', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   })
+
+  // status is null while first ping is in-flight — show Connecting
+  const cfg = (checked && status) ? STATUS_CFG[status] : CONNECTING_CFG
+
+  const resolvedAiLabel = aiLabel || (online ? 'PRAGMA Intelligence Engine' : (checked ? '—' : '…'))
 
   return (
     <header className="border-b border-line bg-paper/95 dark:bg-paper/95 backdrop-blur-sm sticky top-0 z-40">
@@ -78,22 +116,10 @@ export default function TopBar() {
           <div className="h-3.5 w-px bg-line" />
 
           {/* System status pill */}
-          <div className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${
-            !checked  ? 'border-line bg-white dark:bg-surface' :
-            online    ? 'border-success-200 dark:border-green-800 bg-success-50 dark:bg-green-900/30' :
-                        'border-warning-200 dark:border-amber-800 bg-warning-50 dark:bg-amber-900/30'
-          }`}>
-            <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
-              !checked ? 'bg-gray-300 dark:bg-gray-600' :
-              online   ? 'bg-success animate-pulse' :
-                         'bg-warning'
-            }`} />
-            <span className={`font-mono text-[10px] font-semibold ${
-              !checked ? 'text-gray-500 dark:text-gray-400' :
-              online   ? 'text-success-700 dark:text-green-400' :
-                         'text-warning-700 dark:text-amber-400'
-            }`}>
-              {!checked ? 'Connecting…' : online ? 'System Online' : 'Offline Mode'}
+          <div className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${cfg.pill}`}>
+            <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+            <span className={`font-mono text-[10px] font-semibold ${cfg.text}`}>
+              {cfg.label}
             </span>
           </div>
         </div>
@@ -104,29 +130,29 @@ export default function TopBar() {
         <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-success' : 'bg-gray-300 dark:bg-gray-700'}`} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Backend {online ? 'Healthy' : 'Offline'}
+            Backend {online ? 'Healthy' : (checked ? 'Offline' : '…')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-success' : 'bg-gray-300 dark:bg-gray-700'}`} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Database {online ? 'Connected' : 'Unreachable'}
+            SQLite {online ? 'Connected' : (checked ? 'Unreachable' : '…')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-violet-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
+          <Cpu size={9} className={online ? 'text-brass' : 'text-gray-400 dark:text-gray-600'} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            PRAGMA AI {online ? 'Active' : 'Standby'}
+            {resolvedAiLabel}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Activity size={9} className="text-gray-400 dark:text-gray-600" />
+          <Shield size={9} className={online ? 'text-violet-500' : 'text-gray-400 dark:text-gray-600'} />
           <span className="font-mono text-[10px] text-gray-500 dark:text-gray-600">
-            Latency {online ? '42ms' : '—'}
+            {online ? 'Air-Gapped Mode' : (checked ? 'System Down' : 'Initializing…')}
           </span>
         </div>
         <div className="ml-auto font-mono text-[10px] text-gray-400 dark:text-gray-600">
-          PRAGMA v1.0.0 · RBI / SEBI / MCA Compliance Platform
+          PRAGMA v1.0.0 · Air-Gapped Compliance Intelligence · RBI / SEBI / MCA
         </div>
       </div>
     </header>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useMaps } from '../hooks/useMaps'
@@ -12,8 +12,9 @@ import ResolutionFunnel from '../components/shared/ResolutionFunnel'
 import UpcomingDeadlines from '../components/shared/UpcomingDeadlines'
 import AlertBanner from '../components/shared/AlertBanner'
 import { SkeletonMetricCard } from '../components/shared/Skeleton'
+import { getPortfolioCost } from '../api/insights'
 import { formatDate } from '../utils/formatters'
-import { AlertTriangle, Clock, TrendingUp, ShieldCheck, Layers } from 'lucide-react'
+import { AlertTriangle, Clock, TrendingUp, ShieldCheck, Layers, DollarSign, ArrowRight } from 'lucide-react'
 
 const sk = (s) => (s || '').toString().trim().toUpperCase().replace(/\s+/g, '_')
 
@@ -155,43 +156,144 @@ function DeptRiskHeatmap({ maps }) {
   if (!data.length) return null
 
   return (
-    <div className="rounded-xl border border-line bg-white dark:bg-card p-5">
-      <p className="mb-4 font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
-        Department Risk Heatmap
-      </p>
-      <div className="space-y-2.5">
-        {data.map((d) => {
-          const riskLevel = d.avgRisk >= 76 ? 'danger' : d.avgRisk >= 51 ? 'warning' : d.avgRisk >= 26 ? 'brass' : 'success'
-          const barCls = { danger: 'bg-danger', warning: 'bg-warning', brass: 'bg-brass', success: 'bg-success' }[riskLevel]
-          return (
-            <div key={d.dept}>
-              <div className="mb-1 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] font-semibold text-ink dark:text-[#e8edf5]">{d.dept}</span>
-                  <span className="font-mono text-[10px] text-[#8b98aa]">{d.total} MAPs</span>
-                  {d.critical > 0 && (
-                    <span className="rounded bg-danger-50 dark:bg-red-900/30 px-1 py-0.5 font-mono text-[9px] font-bold text-danger dark:text-red-400">
-                      {d.critical} critical
-                    </span>
-                  )}
+    <div className="rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3">
+        <TrendingUp size={13} className="text-[#8b98aa] flex-shrink-0" />
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
+          Department Risk Heatmap
+        </p>
+      </div>
+      <div className="p-5">
+        <div className="space-y-2.5">
+          {data.map((d) => {
+            const riskLevel = d.avgRisk >= 76 ? 'danger' : d.avgRisk >= 51 ? 'warning' : d.avgRisk >= 26 ? 'brass' : 'success'
+            const barCls = { danger: 'bg-danger', warning: 'bg-warning', brass: 'bg-brass', success: 'bg-success' }[riskLevel]
+            return (
+              <div key={d.dept}>
+                <div className="mb-1 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] font-semibold text-ink dark:text-[#e8edf5]">{d.dept}</span>
+                    <span className="font-mono text-[10px] text-[#8b98aa]">{d.total} MAPs</span>
+                    {d.critical > 0 && (
+                      <span className="rounded bg-danger-50 dark:bg-red-900/30 px-1 py-0.5 font-mono text-[9px] font-bold text-danger dark:text-red-400">
+                        {d.critical} critical
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono text-[10px] tabular-nums text-[#8b98aa]">
+                    Risk {d.avgRisk}
+                  </span>
                 </div>
-                <span className="font-mono text-[10px] tabular-nums text-[#8b98aa]">
-                  Risk {d.avgRisk}
+                <div className="h-2 rounded-full bg-line dark:bg-surface overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${barCls}`}
+                    style={{ width: `${Math.max(d.avgRisk, 4)}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <p className="mt-3 font-mono text-[10px] text-[#8b98aa]">
+          Bar = avg. risk score across all MAPs in department
+        </p>
+      </div>
+    </div>
+  )
+}
+
+const fmtCrore = (n) => {
+  if (!n) return '₹0'
+  if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(1)} Cr`
+  if (n >= 100_000)    return `₹${(n / 100_000).toFixed(1)}L`
+  return `₹${Number(n).toLocaleString('en-IN')}`
+}
+
+function ComplianceInvestmentWidget() {
+  const navigate = useNavigate()
+  const [data, setData]       = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getPortfolioCost()
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading || !data || !data.summary.total_cost_inr) return null
+
+  const { summary, department_breakdown } = data
+  const maxCost = Math.max(...(department_breakdown || []).map((d) => d.total_cost), 1)
+
+  return (
+    <div className="rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3">
+        <DollarSign size={13} className="text-brass flex-shrink-0" />
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
+          Compliance Investment Intelligence
+        </p>
+        <button
+          onClick={() => navigate('/cost')}
+          className="ml-auto flex items-center gap-1 font-mono text-[9px] text-primary-600 dark:text-primary-400 hover:underline"
+        >
+          Full Analysis <ArrowRight size={9} />
+        </button>
+      </div>
+      <div className="px-5 py-4">
+        {/* Top-line numbers */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-wide text-[#8b98aa] mb-0.5">Total Cost</p>
+            <p className="font-serif text-2xl font-semibold tabular-nums text-ink dark:text-[#e8edf5]">
+              {fmtCrore(summary.total_cost_inr)}
+            </p>
+            <p className="font-mono text-[9px] text-[#8b98aa]">{summary.active_maps} active MAPs</p>
+          </div>
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-wide text-[#8b98aa] mb-0.5">Penalty Exposure</p>
+            <p className="font-serif text-2xl font-semibold tabular-nums text-red-600 dark:text-red-400">
+              {fmtCrore(summary.total_penalty_inr)}
+            </p>
+            <p className="font-mono text-[9px] text-[#8b98aa]">if non-compliant</p>
+          </div>
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-wide text-[#8b98aa] mb-0.5">Portfolio ROI</p>
+            <p className={`font-serif text-2xl font-semibold tabular-nums ${
+              summary.portfolio_roi_x >= 2
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-amber-600 dark:text-amber-400'
+            }`}>
+              {summary.portfolio_roi_x}×
+            </p>
+            <p className="font-mono text-[9px] text-[#8b98aa]">penalty ÷ cost</p>
+          </div>
+        </div>
+        {/* Dept bars */}
+        <div className="space-y-2">
+          {(department_breakdown || []).slice(0, 4).map((d) => {
+            const pct   = (d.total_cost / maxCost) * 100
+            const color = DEPT_COLORS[d.department] || '#8b98aa'
+            return (
+              <div key={d.department} className="flex items-center gap-2">
+                <span className="w-20 flex-shrink-0 font-mono text-[10px] text-[#8b98aa]">{d.department}</span>
+                <div className="flex-1 h-2 rounded-full bg-line dark:bg-surface overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${Math.max(pct, 3)}%`, backgroundColor: color }}
+                  />
+                </div>
+                <span className="w-14 flex-shrink-0 text-right font-mono text-[10px] text-ink dark:text-[#e8edf5]">
+                  {fmtCrore(d.total_cost)}
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-line dark:bg-surface overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${barCls}`}
-                  style={{ width: `${Math.max(d.avgRisk, 4)}%` }}
-                />
-              </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
+        <p className="mt-3 font-mono text-[9px] text-[#8b98aa]">
+          Based on industry benchmark rate cards · {summary.total_person_days} person-days total
+        </p>
       </div>
-      <p className="mt-3 font-mono text-[10px] text-[#8b98aa]">
-        Bar = avg. risk score across all MAPs in department
-      </p>
     </div>
   )
 }
@@ -244,11 +346,22 @@ export default function Dashboard() {
       trend: { dir: metrics.score >= 70 ? 'up' : 'warn', label: metrics.score >= 70 ? 'On track' : 'Below 70% target' },
     },
     {
-      label: 'Total MAPs',
-      value: maps.length,
-      dot: 'bg-ink dark:bg-primary-400',
-      sub: `${circulars.length} circular${circulars.length !== 1 ? 's' : ''} processed`,
-      trend: maps.length > 0 ? { dir: 'up', label: `${maps.length} auto-extracted` } : null,
+      label: 'Pending Review',
+      value: metrics.pending,
+      dot: metrics.pending > 0 ? 'bg-warning' : 'bg-[#8b98aa]',
+      sub: `${metrics.approved} approved · ${metrics.inProg} in progress`,
+      trend: metrics.pending > 0
+        ? { dir: 'warn', label: 'Awaiting officer approval' }
+        : { dir: 'ok', label: 'Queue clear' },
+    },
+    {
+      label: 'Critical Actions',
+      value: metrics.critical,
+      dot: metrics.critical > 0 ? 'bg-danger' : 'bg-[#8b98aa]',
+      sub: 'high-urgency regulatory flags',
+      trend: metrics.critical > 0
+        ? { dir: 'down', label: `${metrics.critical} require priority action` }
+        : { dir: 'ok', label: 'None outstanding' },
     },
     {
       label: 'Overdue',
@@ -260,22 +373,11 @@ export default function Dashboard() {
         : { dir: 'ok', label: 'All MAPs on schedule' },
     },
     {
-      label: 'Critical Actions',
-      value: metrics.critical,
-      dot: 'bg-red-500',
-      sub: 'high-urgency regulatory flags',
-      trend: metrics.critical > 0
-        ? { dir: 'down', label: `${metrics.critical} require priority action` }
-        : { dir: 'ok', label: 'None outstanding' },
-    },
-    {
-      label: 'Depts Impacted',
-      value: metrics.depts,
-      dot: 'bg-violet-500',
-      sub: 'departments in compliance scope',
-      trend: trends.approved > 0
-        ? { dir: 'up', label: `${trends.approved} MAPs reviewed` }
-        : null,
+      label: 'Circulars Ingested',
+      value: circulars.length,
+      dot: 'bg-brass',
+      sub: `${metrics.depts} dept${metrics.depts !== 1 ? 's' : ''} · ${maps.length} MAPs extracted`,
+      trend: maps.length > 0 ? { dir: 'up', label: 'Auto-extracted by Local AI Engine' } : null,
     },
   ]
 
@@ -329,10 +431,14 @@ export default function Dashboard() {
           <DepartmentWorkload maps={maps} />
         </div>
 
-        <div className="lg:col-span-2 rounded-xl border border-line bg-white dark:bg-card p-5">
-          <p className="mb-4 font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
-            Status Distribution
-          </p>
+        <div className="lg:col-span-2 rounded-xl border border-line bg-white dark:bg-card overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-line bg-paper/40 dark:bg-surface/40 px-5 py-3">
+            <Layers size={13} className="text-[#8b98aa] flex-shrink-0" />
+            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-brass-deep dark:text-brass">
+              Status Distribution
+            </p>
+          </div>
+          <div className="p-5">
           {statusData.length === 0 ? (
             <div className="flex h-44 flex-col items-center justify-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-line bg-paper dark:bg-surface">
@@ -384,6 +490,7 @@ export default function Dashboard() {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
 
@@ -392,6 +499,9 @@ export default function Dashboard() {
         <ResolutionFunnel maps={maps} />
         <AIExtractionPanel maps={maps} />
       </div>
+
+      {/* ── Compliance Investment Intelligence widget ── */}
+      <ComplianceInvestmentWidget />
 
       {/* ── Audit activity + deadlines ── */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">

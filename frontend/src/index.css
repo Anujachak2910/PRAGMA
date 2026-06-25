@@ -11,10 +11,10 @@
 }
 
 .dark {
-  --paper:   7   16  25;    /* #071019  deep navy void        */
+  --paper:   7   16  24;    /* #071018  deep navy void        */
   --surface: 13  23  38;    /* #0d1726  elevated panel        */
-  --card:    18  32  51;    /* #122033  card surface          */
-  --line:    32  50  71;    /* #203247  structural border     */
+  --card:    16  28  44;    /* #101c2c  card surface          */
+  --line:    42  64  92;    /* #2a405c  structural border — readable without bloom */
 }
 
 @layer base {
@@ -35,6 +35,49 @@
   }
 }
 
+/* ── Component layer — canonical reusable patterns ─────────────────────────── */
+@layer components {
+
+  /* Shared form input baseline */
+  .field-input {
+    @apply w-full rounded-lg border border-line bg-white dark:bg-surface
+           px-3 py-2 text-sm text-ink dark:text-[#e8edf5]
+           placeholder:text-[#8b98aa]
+           focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400
+           disabled:opacity-60 disabled:cursor-not-allowed
+           transition-colors;
+  }
+
+  /* Section header label — the mono ALL-CAPS label used above every panel */
+  .section-label {
+    @apply font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8b98aa];
+  }
+
+  /* Card panel wrapper — rounded border card used everywhere */
+  .panel {
+    @apply rounded-xl border border-line bg-white dark:bg-card overflow-hidden;
+  }
+
+  /* Panel header row — the header strip at the top of every panel */
+  .panel-header {
+    @apply flex items-center gap-2 border-b border-line
+           bg-paper/40 dark:bg-surface/40 px-5 py-3 flex-shrink-0;
+  }
+
+  /* Enterprise info chip — the small bordered chips used for metadata */
+  .info-chip {
+    @apply inline-flex items-center gap-1 rounded border border-line
+           bg-paper dark:bg-surface/60 px-2 py-0.5
+           font-mono text-[9px] text-[#8b98aa];
+  }
+
+  /* Status/type badge in the audit log */
+  .event-badge {
+    @apply inline-block rounded border px-2 py-0.5
+           font-mono text-[9px] font-semibold uppercase tracking-wide;
+  }
+}
+
 @layer utilities {
   .tnum { font-variant-numeric: tabular-nums; }
 
@@ -44,8 +87,13 @@
     animation: shimmer 2s infinite linear;
   }
   .dark .skeleton {
-    background: linear-gradient(90deg, #0d1726 25%, #122033 50%, #0d1726 75%);
+    background: linear-gradient(90deg, #0d1726 25%, #101c2c 50%, #0d1726 75%);
     background-size: 1000px 100%;
+  }
+
+  /* Page container: subtle top-to-bottom depth gradient in dark mode */
+  .dark .page-gradient {
+    background: linear-gradient(180deg, #071018 0%, #0b1523 100%);
   }
 }
 
@@ -54,14 +102,15 @@
   100% { background-position:  1000px 0; }
 }
 
-/* ── Slim scrollbar ── */
+/* ── Scrollbar — visible but unobtrusive ────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: #C9C0B3; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #B0A598; }
+::-webkit-scrollbar-thumb { background: #bfb6aa; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #a89e92; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-.dark ::-webkit-scrollbar-thumb { background: #203247; }
-.dark ::-webkit-scrollbar-thumb:hover { background: #2d4860; }
+/* Dark mode — meaningfully higher contrast than the surface so it's findable */
+.dark ::-webkit-scrollbar-thumb { background: #3a5572; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #4d6f8f; }
 
 ::selection { background: #041E42; color: #F8F6F2; }
-.dark ::selection { background: #c69b4f; color: #071019; }
+.dark ::selection { background: #c69b4f; color: #071018; }

@@ -1,138 +1,139 @@
 /**
  * PRAGMA — useBackendStatus
  *
- * Enterprise-grade health polling with consecutive-failure gating.
+ * Tri-state health monitor with AI engine awareness.
  *
- * Transition rules
+ * States
+ * ──────
+ *   healthy   — API reachable + AI available (Ollama or rule-based)
+ *   degraded  — API reachable but AI reports unavailable
+ *   offline   — confirmed unreachable (3 consecutive failures OR >10s startup timeout)
+ *
+ * Startup behavior
  * ─────────────────
- *   ONLINE  ← 1 successful /health response (immediate recovery)
- *   OFFLINE ← FAILURES_TO_OFFLINE (3) consecutive failures
+ *   status is null until the FIRST successful ping resolves.
+ *   TopBar shows "Connecting…" while status is null.
+ *   We never flash "offline" during startup — only after confirmed 3 failures.
  *
- * Single or double failures are absorbed. The status dot never flickers
- * from a momentary network hiccup or a slow Neon cold-start.
- *
- * Concurrency guards
- * ──────────────────
- *   • inFlight ref  — skips a new ping if one is already running
- *   • AbortController — hard-cancels a request after HEALTH_TIMEOUT_MS
- *   • unmounting ref  — discards abort errors on cleanup; no setState
- *                        after unmount
- *
- * Return shape
- * ────────────
- *   isOnline          — true after first success; false after 3 failures
- *   databaseConnected — mirrors isOnline (extend when /health reports DB)
- *   claudeAvailable   — mirrors isOnline (extend when /health reports AI)
- *   lastChecked       — Date of last completed check, or null
- *   online            — alias for isOnline (TopBar.jsx backward compat)
- *   checked           — true after the very first ping resolves
+ * Polling
+ * ───────
+ *   Polls every 20s. In-flight deduplication prevents stacked requests.
+ *   Exponential back-off on failure (20s → 40s → 80s, capped at 120s).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-// ─── Configuration ────────────────────────────────────────────────────────────
+const API_BASE   = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
+const HEALTH_URL = API_BASE.replace(/\/api\/v1\/?$/, '') + '/health'
 
-const API_BASE            = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
-const HEALTH_URL          = API_BASE.replace(/\/api\/v1\/?$/, '') + '/health'
-
-const HEALTH_TIMEOUT_MS   = 5_000   // abort individual request after 5s
-const POLL_INTERVAL_MS    = 15_000  // check every 15s — not every 5s
-const FAILURES_TO_OFFLINE = 3       // absorb up to 2 failures before going offline
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+const HEALTH_TIMEOUT_MS   = 4_000   // abort if backend takes > 4s
+const POLL_BASE_MS        = 20_000  // base poll interval
+const FAILURES_TO_OFFLINE = 3       // confirmed offline after 3 consecutive failures
+const STARTUP_GRACE_MS    = 12_000  // never show offline before this many ms post-mount
 
 export function useBackendStatus() {
-  const [isOnline,    setIsOnline]    = useState(false)
-  const [checked,     setChecked]     = useState(false)  // true after first ping
+  // null = still connecting (never been online or offline yet)
+  const [status,      setStatus]      = useState(null)
+  const [aiLabel,     setAiLabel]     = useState(null)
+  const [aiEngine,    setAiEngine]    = useState(null)
+  const [checked,     setChecked]     = useState(false)
   const [lastChecked, setLastChecked] = useState(null)
 
-  // Refs — mutable state that must not trigger re-renders
-  const failureCount = useRef(0)        // consecutive failure counter
-  const inFlight     = useRef(false)    // overlap guard
-  const controller   = useRef(null)     // current AbortController
-  const unmounting   = useRef(false)    // set to true in cleanup
+  const failureCount  = useRef(0)
+  const inFlight      = useRef(false)
+  const controller    = useRef(null)
+  const unmounting    = useRef(false)
+  const mountTime     = useRef(Date.now())
+  const pollTimerRef  = useRef(null)
+
+  const scheduleNext = useCallback((delayMs) => {
+    clearTimeout(pollTimerRef.current)
+    pollTimerRef.current = setTimeout(() => ping(), delayMs)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const ping = useCallback(async () => {
-    // ── overlap guard ───────────────────────────────────────────────────────
-    if (inFlight.current) return
+    if (inFlight.current || unmounting.current) return
     inFlight.current = true
 
-    // ── fresh AbortController per request ───────────────────────────────────
-    controller.current?.abort()                       // cancel any leaked previous
+    controller.current?.abort()
     controller.current = new AbortController()
     const { signal } = controller.current
 
-    // hard timeout — abort if server accepts TCP but never responds
     const timer = setTimeout(() => controller.current?.abort(), HEALTH_TIMEOUT_MS)
 
     try {
       const res = await fetch(HEALTH_URL, { signal })
       clearTimeout(timer)
 
-      if (res.ok) {
-        // ── SUCCESS ─────────────────────────────────────────────────────────
-        failureCount.current = 0
-        setIsOnline(true)
-        setChecked(true)
-        setLastChecked(new Date())
-        console.log('[HEALTH] success')
-      } else {
-        // HTTP error (4xx/5xx) — treat as failure
-        throw new Error(`HTTP ${res.status}`)
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
-    } catch (err) {
-      clearTimeout(timer)
+      const body = await res.json().catch(() => ({}))
 
-      // Component unmounted and cleanup aborted the request — not a real failure
-      if (unmounting.current) {
-        inFlight.current = false
-        return
-      }
+      if (unmounting.current) return
 
-      // ── FAILURE ─────────────────────────────────────────────────────────
-      failureCount.current += 1
-      const n = failureCount.current
-
+      failureCount.current = 0
       setChecked(true)
       setLastChecked(new Date())
 
-      if (n < FAILURES_TO_OFFLINE) {
-        // absorb — do NOT change isOnline; no flicker
-        console.log(`[HEALTH] failure (${n}/${FAILURES_TO_OFFLINE})`)
-      } else {
-        // threshold reached — declare offline
-        console.log('[HEALTH] backend offline')
-        setIsOnline(false)
+      const aiAvailable = body.ai_available !== false
+      setAiLabel(body.ai_label || (aiAvailable ? 'PRAGMA Intelligence Engine' : 'AI Standby'))
+      setAiEngine(body.ai_engine || null)
+      setStatus(aiAvailable ? 'healthy' : 'degraded')
+
+      scheduleNext(POLL_BASE_MS)
+
+    } catch (err) {
+      clearTimeout(timer)
+      if (unmounting.current) return
+
+      failureCount.current += 1
+      const n = failureCount.current
+
+      // Exponential back-off: 20s, 40s, 80s, capped at 120s
+      const backoff = Math.min(POLL_BASE_MS * Math.pow(2, n - 1), 120_000)
+
+      if (n >= FAILURES_TO_OFFLINE) {
+        // Only declare offline if startup grace period has passed
+        const elapsed = Date.now() - mountTime.current
+        if (elapsed >= STARTUP_GRACE_MS) {
+          setChecked(true)
+          setLastChecked(new Date())
+          setStatus('offline')
+          setAiLabel(null)
+          setAiEngine(null)
+        }
+        // else: still in grace period — keep showing "Connecting…"
       }
+      // < 3 failures: absorb silently, no status change
+
+      scheduleNext(backoff)
     } finally {
       inFlight.current = false
     }
-  }, []) // no deps — all mutable state is in refs
+  }, [scheduleNext])
 
   useEffect(() => {
     unmounting.current = false
-
-    // fire immediately, then on interval
+    mountTime.current  = Date.now()
     ping()
-    const id = setInterval(ping, POLL_INTERVAL_MS)
 
     return () => {
-      unmounting.current = true          // suppress state updates in catch
-      clearInterval(id)
-      controller.current?.abort()        // cancel in-flight request on unmount
+      unmounting.current = true
+      clearTimeout(pollTimerRef.current)
+      controller.current?.abort()
     }
   }, [ping])
 
-  return {
-    // ── New enterprise interface ──────────────────────────────────────────
-    isOnline,
-    databaseConnected: isOnline,   // future: parse from /health response body
-    claudeAvailable:   isOnline,   // future: parse from /health response body
-    lastChecked,
+  const isOnline = status === 'healthy' || status === 'degraded'
 
-    // ── Backward compat — TopBar.jsx destructures these ──────────────────
-    online:  isOnline,
+  return {
+    status,
+    aiLabel,
+    aiEngine,
     checked,
+    lastChecked,
+    online:            isOnline,
+    isOnline,
+    databaseConnected: isOnline,
   }
 }

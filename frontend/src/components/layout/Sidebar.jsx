@@ -1,16 +1,22 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, CheckSquare, ScrollText,
-  Upload, Shield, Layers,
+  Upload, Shield, Layers, Zap, GitBranch,
+  GitCompare, AlertOctagon, DollarSign,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { to: '/',        label: 'Dashboard',     sub: 'Overview',      icon: LayoutDashboard, end: true },
-  { to: '/maps',    label: 'Action Points', sub: 'MAP Register',  icon: FileText },
-  { to: '/review',  label: 'AI Review',     sub: 'Extraction',    icon: Layers },
-  { to: '/approvals', label: 'Approvals',   sub: 'Review Queue',  icon: CheckSquare },
-  { to: '/events',  label: 'Audit Log',     sub: 'Event Ledger',  icon: ScrollText },
-  { to: '/upload',  label: 'New Circular',  sub: 'Intake',        icon: Upload },
+  { to: '/',          label: 'Dashboard',        sub: 'Overview',          icon: LayoutDashboard, end: true },
+  { to: '/maps',      label: 'Action Points',    sub: 'MAP Register',      icon: FileText },
+  { to: '/cost',      label: 'Cost Intelligence', sub: 'Financial Burden',  icon: DollarSign },
+  { to: '/simulate',  label: 'Impact Simulator', sub: 'Predictive AI',     icon: Zap },
+  { to: '/diff',      label: 'Change Diff',      sub: 'Version Analysis',  icon: GitCompare },
+  { to: '/conflicts', label: 'Conflict Matrix',  sub: 'Cross-Regulator',   icon: AlertOctagon },
+  { to: '/trace',     label: 'Trace Graph',      sub: 'Provenance',        icon: GitBranch },
+  { to: '/review',    label: 'AI Review',        sub: 'Extraction',        icon: Layers },
+  { to: '/approvals', label: 'Approvals',        sub: 'Review Queue',      icon: CheckSquare },
+  { to: '/events',    label: 'Audit Log',        sub: 'Event Ledger',      icon: ScrollText },
+  { to: '/upload',    label: 'New Circular',     sub: 'Intake',            icon: Upload },
 ]
 
 export default function Sidebar() {
@@ -21,7 +27,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-2 mb-3">
           <Shield size={14} className="text-brass flex-shrink-0" strokeWidth={2} />
           <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-brass">
-            Regulatory Register
+            Air-Gapped Intelligence
           </p>
         </div>
         <h1 className="font-serif text-[28px] font-semibold leading-none tracking-tight text-white">
@@ -34,7 +40,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 px-3 py-2">
+      <nav className="flex-1 space-y-0.5 px-3 py-2 overflow-y-auto">
         {NAV_ITEMS.map(({ to, label, sub, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -81,7 +87,7 @@ export default function Sidebar() {
           Canara Bank Internal Use
         </p>
         <p className="mt-1 font-mono text-[9px] text-slate-700">
-          Air-Gapped · v1.0
+          Air-Gapped · v1.0 · Offline Ready
         </p>
       </div>
     </aside>

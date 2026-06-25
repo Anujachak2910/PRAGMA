@@ -71,14 +71,14 @@ export default function AlertBanner({ maps = [], circulars = [] }) {
         </div>
         <p
           className={`text-sm font-semibold truncate ${
-            isCritical ? 'text-danger-700' : 'text-warning-700'
+            isCritical ? 'text-danger-700 dark:text-red-300' : 'text-warning-700 dark:text-amber-300'
           }`}
         >
           {circularTitle}
         </p>
         <p className="mt-0.5 text-[13px] text-gray-600 dark:text-[#e8edf5]/80">
           {criticalPending.length > 0 && (
-            <strong className="text-danger-700 font-semibold">
+            <strong className="text-danger-700 dark:text-red-300 font-semibold">
               {criticalPending.length} Critical{' '}
             </strong>
           )}
@@ -106,7 +106,7 @@ export default function AlertBanner({ maps = [], circulars = [] }) {
         </Link>
         <button
           onClick={() => setDismissed(true)}
-          className="rounded p-1 text-gray-400 hover:bg-black/[0.05] hover:text-gray-600"
+          className="rounded p-1 text-gray-400 dark:text-gray-500 hover:bg-black/[0.05] dark:hover:bg-white/[0.05] hover:text-gray-600 dark:hover:text-gray-300"
           aria-label="Dismiss alert"
         >
           <X size={14} />

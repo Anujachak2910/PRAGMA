@@ -5,11 +5,29 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    // Proxy API calls during development — avoids CORS issues on localhost
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor: React core
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Vendor: charts (Recharts is ~400KB unminified)
+          'vendor-charts': ['recharts'],
+          // Vendor: graph visualization
+          'vendor-flow': ['@xyflow/react'],
+          // Vendor: icons + misc
+          'vendor-icons': ['lucide-react'],
+          // Vendor: HTTP client
+          'vendor-axios': ['axios'],
+        },
       },
     },
   },
