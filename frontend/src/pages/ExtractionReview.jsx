@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useCirculars } from '../hooks/useCirculars'
 import { useMaps } from '../hooks/useMaps'
 import { recomputeProvenance } from '../api/insights'
+import { getCircularById } from '../api/circulars'
 import PriorityBadge from '../components/shared/PriorityBadge'
 import StatusBadge from '../components/shared/StatusBadge'
 import { SkeletonTableRows } from '../components/shared/Skeleton'
@@ -260,8 +261,31 @@ export default function ExtractionReview() {
   const [recomputing, setRecomputing]               = useState(false)
   const [recomputeDone, setRecomputeDone]           = useState(false)
 
+  const [circularDetail, setCircularDetail]         = useState(null)
+  const [loadingDetail, setLoadingDetail]           = useState(false)
+
   const sectionRefs = useRef({})
   const highlightRef = useRef(null)
+
+  useEffect(() => {
+    if (!selectedCircularId) {
+      setCircularDetail(null)
+      return
+    }
+    let active = true
+    setLoadingDetail(true)
+    getCircularById(selectedCircularId)
+      .then(data => {
+        if (active) {
+          setCircularDetail(data)
+          setLoadingDetail(false)
+        }
+      })
+      .catch(() => {
+        if (active) setLoadingDetail(false)
+      })
+    return () => { active = false }
+  }, [selectedCircularId])
 
   useEffect(() => {
     if (!selectedCircularId && circulars.length) {
@@ -332,7 +356,7 @@ export default function ExtractionReview() {
     finally { setRecomputing(false) }
   }, [selectedCircularId, recomputing, refresh])
 
-  const loading = circsLoading || mapsLoading
+  const loading = circsLoading || mapsLoading || loadingDetail
 
   return (
     <div className="flex flex-col gap-4 h-[calc(100vh-9rem)]">
@@ -435,13 +459,13 @@ export default function ExtractionReview() {
               </div>
             ) : hasEvidence ? (
               <HighlightedText
-                content={circular?.content ?? ''}
+                content={circularDetail?.content ?? ''}
                 highlights={highlights}
                 onHighlightClick={handleHighlightClick}
               />
             ) : (
               <CircularTextFallback
-                content={circular?.content ?? ''}
+                content={circularDetail?.content ?? ''}
                 selectedClauseRef={selectedMap?.source_clause ?? null}
                 sectionRefs={sectionRefs}
               />

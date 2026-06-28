@@ -37,12 +37,12 @@ from app.database import UUIDType
 
 
 def seed():
-    print("=== PRAGMA Demo Seeder ===\n")
+    print("[OK] PRAGMA Demo Seeder ===\n")
 
     # 1. Create tables
     print("Creating tables...")
     create_all_tables()
-    print("✓ Tables ready\n")
+    print("[OK] Tables ready\n")
 
     db = SessionLocal()
 
