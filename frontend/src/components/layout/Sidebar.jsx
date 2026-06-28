@@ -1,55 +1,94 @@
-﻿/**
- * PRAGMA — Sidebar (institutional masthead rail)
- * Owner: Ashwin — M4 register pass
- */
-
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, FileText, CheckSquare, ScrollText, Upload } from 'lucide-react'
+import {
+  LayoutDashboard, FileText, CheckSquare, ScrollText,
+  Upload, Shield, Layers, Zap, GitBranch,
+  GitCompare, AlertOctagon, DollarSign,
+} from 'lucide-react'
 
 const NAV_ITEMS = [
-  { to: '/',          label: 'Dashboard',       icon: LayoutDashboard, end: true },
-  { to: '/maps',      label: 'Action Points',   icon: FileText },
-  { to: '/approvals', label: 'Approvals',       icon: CheckSquare },
-  { to: '/events',    label: 'Audit Log',       icon: ScrollText },
-  { to: '/upload',    label: 'New Circular',    icon: Upload },
+  { to: '/',          label: 'Dashboard',        sub: 'Overview',          icon: LayoutDashboard, end: true },
+  { to: '/maps',      label: 'Action Points',    sub: 'MAP Register',      icon: FileText },
+  { to: '/cost',      label: 'Cost Intelligence', sub: 'Financial Burden',  icon: DollarSign },
+  { to: '/simulate',  label: 'Impact Simulator', sub: 'Predictive AI',     icon: Zap },
+  { to: '/diff',      label: 'Change Diff',      sub: 'Version Analysis',  icon: GitCompare },
+  { to: '/conflicts', label: 'Conflict Matrix',  sub: 'Cross-Regulator',   icon: AlertOctagon },
+  { to: '/trace',     label: 'Trace Graph',      sub: 'Provenance',        icon: GitBranch },
+  { to: '/review',    label: 'AI Review',        sub: 'Extraction',        icon: Layers },
+  { to: '/approvals', label: 'Approvals',        sub: 'Review Queue',      icon: CheckSquare },
+  { to: '/events',    label: 'Audit Log',        sub: 'Event Ledger',      icon: ScrollText },
+  { to: '/upload',    label: 'New Circular',     sub: 'Intake',            icon: Upload },
 ]
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-64 flex-col bg-ink text-slate-300">
-      <div className="px-7 pb-6 pt-7">
-        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brass">Regulatory Register</p>
-        <h1 className="mt-2 font-serif text-[28px] font-semibold leading-none tracking-tight text-white">PRAGMA</h1>
-        <div className="mt-3 h-px w-full bg-gradient-to-r from-brass/80 to-transparent" />
+    <aside className="flex w-64 flex-col bg-ink dark:bg-[#040C14] text-slate-300 flex-shrink-0">
+      {/* Masthead */}
+      <div className="px-7 pb-5 pt-7">
+        <div className="flex items-center gap-2 mb-3">
+          <Shield size={14} className="text-brass flex-shrink-0" strokeWidth={2} />
+          <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-brass">
+            Air-Gapped Intelligence
+          </p>
+        </div>
+        <h1 className="font-serif text-[28px] font-semibold leading-none tracking-tight text-white">
+          PRAGMA
+        </h1>
+        <p className="mt-1 font-mono text-[10px] text-slate-500 tracking-wide">
+          Canara Bank · Compliance Platform
+        </p>
+        <div className="mt-4 h-px w-full bg-gradient-to-r from-brass/60 to-transparent" />
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-3 py-3">
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+      {/* Navigation */}
+      <nav className="flex-1 space-y-0.5 px-3 py-2 overflow-y-auto">
+        {NAV_ITEMS.map(({ to, label, sub, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
               [
-                'group relative flex items-center gap-3 rounded-md px-4 py-2.5 text-sm transition-colors',
-                isActive ? 'bg-white/[0.07] text-white' : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-100',
+                'group relative flex items-center gap-3 rounded-md px-4 py-2.5 transition-colors',
+                isActive
+                  ? 'bg-white/[0.09] text-white'
+                  : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-100',
               ].join(' ')
             }
           >
             {({ isActive }) => (
               <>
-                <span className={['absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r bg-brass transition-opacity', isActive ? 'opacity-100' : 'opacity-0'].join(' ')} />
-                <Icon size={17} strokeWidth={1.75} />
-                <span className="font-medium">{label}</span>
+                <span
+                  className={[
+                    'absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-r bg-brass transition-all duration-150',
+                    isActive ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0',
+                  ].join(' ')}
+                />
+                <Icon
+                  size={16}
+                  strokeWidth={isActive ? 2 : 1.75}
+                  className={isActive ? 'text-brass' : ''}
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium leading-none">{label}</p>
+                  <p className={`mt-0.5 font-mono text-[9px] tracking-wide ${
+                    isActive ? 'text-brass/70' : 'text-slate-600'
+                  }`}>{sub}</p>
+                </div>
               </>
             )}
           </NavLink>
         ))}
       </nav>
 
-      <div className="px-7 pb-6 pt-4">
+      {/* Footer */}
+      <div className="px-7 pb-6 pt-2">
         <div className="h-px w-full bg-white/10" />
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">SuRaksha Cyber 2.0</p>
+        <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.18em] text-slate-600">
+          Canara Bank Internal Use
+        </p>
+        <p className="mt-1 font-mono text-[9px] text-slate-700">
+          Air-Gapped · v1.0 · Offline Ready
+        </p>
       </div>
     </aside>
   )

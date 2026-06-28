@@ -28,9 +28,16 @@ class MAPOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    # Optional enhancement fields (Task 11)
+    # Optional enhancement fields
     confidence_score: Optional[float] = None
-    source_clause: Optional[str] = None
+    source_clause:    Optional[str]   = None
+
+    # Clause provenance (populated by provenance_service after extraction)
+    evidence_quote:        Optional[str]   = None
+    evidence_start_offset: Optional[int]   = None
+    evidence_end_offset:   Optional[int]   = None
+    evidence_similarity:   Optional[float] = None
+    provenance_method:     Optional[str]   = None
 
     model_config = ConfigDict(from_attributes=True)
 

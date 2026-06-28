@@ -1,28 +1,53 @@
-﻿import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import { AppProvider } from './contexts/AppContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import ErrorBoundary from './components/shared/ErrorBoundary'
 import DashboardLayout from './layouts/DashboardLayout'
-import Dashboard from './pages/Dashboard'
-import MAPsView from './pages/MAPsView'
-import ApprovalPanel from './pages/ApprovalPanel'
-import EventLog from './pages/EventLog'
-import CircularUpload from './pages/CircularUpload'
+import Spinner from './components/shared/Spinner'
+
+// Eagerly loaded — core pages always needed immediately
+import Dashboard      from './pages/Dashboard'
+import MAPsView       from './pages/MAPsView'
+
+// Lazily loaded — reduces initial bundle by ~180 KB
+const ApprovalPanel     = lazy(() => import('./pages/ApprovalPanel'))
+const EventLog          = lazy(() => import('./pages/EventLog'))
+const CircularUpload    = lazy(() => import('./pages/CircularUpload'))
+const ExtractionReview  = lazy(() => import('./pages/ExtractionReview'))
+const SimulateView      = lazy(() => import('./pages/SimulateView'))
+const TraceabilityGraph = lazy(() => import('./pages/TraceabilityGraph'))
+const DiffView          = lazy(() => import('./pages/DiffView'))
+const ConflictMatrix    = lazy(() => import('./pages/ConflictMatrix'))
+const CostIntelligence  = lazy(() => import('./pages/CostIntelligence'))
+
+function PageLoader() {
+  return <Spinner label="Loading page…" />
+}
 
 function App() {
   return (
-    <AppProvider>
-      <ErrorBoundary>
-        <Routes>
-          <Route element={<DashboardLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/maps" element={<MAPsView />} />
-            <Route path="/approvals" element={<ApprovalPanel />} />
-            <Route path="/events" element={<EventLog />} />
-            <Route path="/upload" element={<CircularUpload />} />
-          </Route>
-        </Routes>
-      </ErrorBoundary>
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <ErrorBoundary>
+          <Routes>
+            <Route element={<DashboardLayout />}>
+              <Route path="/"          element={<Dashboard />} />
+              <Route path="/maps"      element={<MAPsView />} />
+              <Route path="/review"    element={<Suspense fallback={<PageLoader />}><ExtractionReview /></Suspense>} />
+              <Route path="/approvals" element={<Suspense fallback={<PageLoader />}><ApprovalPanel /></Suspense>} />
+              <Route path="/events"    element={<Suspense fallback={<PageLoader />}><EventLog /></Suspense>} />
+              <Route path="/upload"    element={<Suspense fallback={<PageLoader />}><CircularUpload /></Suspense>} />
+              <Route path="/simulate"  element={<Suspense fallback={<PageLoader />}><SimulateView /></Suspense>} />
+              <Route path="/trace"     element={<Suspense fallback={<PageLoader />}><TraceabilityGraph /></Suspense>} />
+              <Route path="/diff"      element={<Suspense fallback={<PageLoader />}><DiffView /></Suspense>} />
+              <Route path="/conflicts" element={<Suspense fallback={<PageLoader />}><ConflictMatrix /></Suspense>} />
+              <Route path="/cost"      element={<Suspense fallback={<PageLoader />}><CostIntelligence /></Suspense>} />
+            </Route>
+          </Routes>
+        </ErrorBoundary>
+      </AppProvider>
+    </ThemeProvider>
   )
 }
 

@@ -1,11 +1,8 @@
 """
 PRAGMA — MAP Service
 
-Owner: Diyasha (Backend APIs)
-Milestone: M2
-
 Responsibilities:
-  - Persist MAPs extracted by claude_service into the database
+  - Persist extracted MAPs into the database
   - Look up department by name and attach to each MAP
   - Update MAP status with validation
   - Query MAPs with filters
@@ -13,7 +10,7 @@ Responsibilities:
 
 from datetime import datetime, date
 import logging
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import uuid
 
 from app.models.map import MAP, MAP_STATUSES
@@ -25,8 +22,15 @@ logger = logging.getLogger(__name__)
 
 def create_maps_from_extraction(db: Session, circular_id: uuid.UUID, raw_maps: list[dict]) -> list[MAP]:
     """
-    Receive Claude MAP output, resolve departments, create and persist MAP records, and return them.
+    Receive extracted MAP dicts, resolve departments, persist MAP records, compute clause provenance.
     """
+    from app.models.circular import Circular
+    from app.services.provenance_service import compute_provenance_for_map
+
+    # Fetch circular content once for provenance computation
+    circular = db.query(Circular).filter(Circular.id == str(circular_id)).first()
+    circular_content = circular.content if circular else ""
+
     created_maps = []
     for raw_map in raw_maps:
         # Resolve department
@@ -67,13 +71,14 @@ def create_maps_from_extraction(db: Session, circular_id: uuid.UUID, raw_maps: l
     for m in created_maps:
         db.refresh(m)
 
-    # Log maps_extracted event
-    log_event(
-        db=db,
-        event_type="maps_extracted",
-        description=f"{len(created_maps)} MAPs extracted and routed successfully",
-        circular_id=circular_id
-    )
+    # ── Clause provenance — compute evidence for each MAP ─────────────────────
+    if circular_content:
+        try:
+            for m in created_maps:
+                compute_provenance_for_map(db, m, circular_content)
+            db.commit()
+        except Exception as exc:
+            logger.warning("Provenance computation failed (non-fatal): %s", exc)
 
     return created_maps
 
@@ -86,9 +91,13 @@ def get_maps(
     circular_id: uuid.UUID = None
 ) -> list[MAP]:
     """
-    Query MAPs with optional filters for status, department name, priority, and parent circular.
+    Query MAPs with optional filters.
+
+    Uses joinedload for department to avoid N+1 queries.
+    Previously: accessing map.department in MAPOut fired one SELECT per MAP.
+    Now: department is loaded in a single JOIN on the initial query.
     """
-    query = db.query(MAP)
+    query = db.query(MAP).options(joinedload(MAP.department))
 
     if status:
         query = query.filter(MAP.status.ilike(status.strip()))

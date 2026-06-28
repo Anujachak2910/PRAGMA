@@ -14,3 +14,6 @@ export const getCirculars = () =>
 
 export const getCircularById = (id) =>
   api.get(`/circulars/${id}`).then((r) => r.data)
+
+export const getEnhancementStatus = (circularId) =>
+  api.get(`/circulars/${circularId}/enhancement`).then((r) => r.data)
