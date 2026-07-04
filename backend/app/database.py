@@ -37,7 +37,9 @@ class UUIDType(TypeDecorator):
         return str(value)
 
     def process_result_value(self, value, dialect):
-        return value   # string UUID — consistent across both backends
+        if value is None:
+            return None
+        return str(value)   # string UUID — consistent across both backends
 
     @staticmethod
     def new() -> str:
@@ -50,6 +52,12 @@ class UUIDType(TypeDecorator):
 def _build_engine():
     url = settings.DATABASE_URL
 
+    # Disable SQLAlchemy 2.0 "insertmanyvalues" batching. Our UUID primary key is a
+    # custom TypeDecorator (UUIDType) with a client-side default (UUIDType.new). When
+    # several rows are inserted in one flush (e.g. multiple MAPs from one circular),
+    # the insertmanyvalues sentinel mechanism cannot correlate the RETURNING rows on
+    # PostgreSQL and raises "Can't match sentinel values in result set". Falling back
+    # to per-row INSERT...RETURNING is correct and fast enough at our scale.
     if url.startswith("sqlite"):
         # SQLite: no connection pool, enable WAL for concurrent reads during demo
         from sqlalchemy.pool import StaticPool
@@ -57,6 +65,7 @@ def _build_engine():
             url,
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
+            use_insertmanyvalues=False,
         )
 
     # PostgreSQL (development / future production)
@@ -72,6 +81,7 @@ def _build_engine():
         pool_timeout=10,
         pool_recycle=1800,
         connect_args={"connect_timeout": 10},
+        use_insertmanyvalues=False,
     )
 
 

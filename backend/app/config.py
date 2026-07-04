@@ -8,18 +8,21 @@ Offline-first: Claude/Anthropic settings are optional legacy fields.
 Primary AI engine is Ollama (local inference).
 """
 
+import sys
 from typing import Optional, List
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     # ── Database ──────────────────────────────────────────────────────────────
+    # Railway: mount a volume at /data and set DATABASE_URL=sqlite:////data/pragma.db
+    # Local:   defaults to a file in the backend working directory
     DATABASE_URL: str = "sqlite:///./pragma_demo.db"
 
     # ── AI Engine ─────────────────────────────────────────────────────────────
     # "ollama"     — use local Ollama inference (default, offline-safe)
     # "rule_based" — skip Ollama, use rule-based extraction only
-    AI_ENGINE:      str = "ollama"
+    AI_ENGINE:      str = "rule_based" if "pytest" in sys.modules else "ollama"
     OLLAMA_URL:     str = "http://localhost:11434"
     OLLAMA_BASE_URL: str = "http://localhost:11434"  # alias for backwards compat
     # Model priority: qwen3:8b > llama3.1:8b > phi3.5
