@@ -13,6 +13,10 @@
 [![Air-Gapped](https://img.shields.io/badge/Deployment-Air--Gapped-success?style=flat-square)](/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](/)
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-pragma--lac.vercel.app-blueviolet?style=for-the-badge&logo=vercel)](https://pragma-lac.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Anujachak2910%2FPRAGMA-181717?style=for-the-badge&logo=github)](https://github.com/Anujachak2910/PRAGMA)
+
+
 ---
 
 *Built for Indian banking institutions operating under RBI, SEBI, and MCA oversight*
