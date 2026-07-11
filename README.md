@@ -13,6 +13,8 @@
 [![Air-Gapped](https://img.shields.io/badge/Deployment-Air--Gapped-success?style=flat-square)](/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](/)
 
+🔗 **Live Demo:** https://pragma-lac.vercel.app
+
 ---
 
 *Built for Indian banking institutions operating under RBI, SEBI, and MCA oversight*
